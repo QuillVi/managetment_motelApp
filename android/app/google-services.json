@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "497265222573",
+    "project_id": "managetmantmotel",
+    "storage_bucket": "managetmantmotel.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:497265222573:android:c01d542b57f45801a3f724",
+        "android_client_info": {
+          "package_name": "com.example.motelapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeL_WEl_Qf-ZSk89y60PVNYLvFBpDzPao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
