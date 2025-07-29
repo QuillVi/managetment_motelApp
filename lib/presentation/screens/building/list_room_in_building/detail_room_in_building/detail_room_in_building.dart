@@ -176,7 +176,7 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
           ),
           const SizedBox(height: 12),
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: 12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
@@ -194,26 +194,62 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
+                    Container(
+                      height: 46,
+                      width: 110,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.orange),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      onPressed: () {},
-                      child: const Text('Chỉnh sửa'),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                        ),
+                        onPressed: () {},
+                        child: const Text(
+                          'Chỉnh sửa',
+                          style: TextStyle(color: Colors.orange, fontSize: 12),
+                        ),
+                      ),
                     ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                    const SizedBox(width: 8),
+                    Container(
+                      height: 46,
+                      width: 110,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.red),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      onPressed: () {},
-                      child: const Text('Xoá'),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                        ),
+                        onPressed: () {},
+                        child: const Text(
+                          'Xóa',
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
                     ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                    const SizedBox(width: 8),
+
+                    Container(
+                      height: 46,
+                      width: 110,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.green),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      onPressed: () {},
-                      child: const Text('Thanh lý'),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                        ),
+                        onPressed: () {},
+                        child: const Text(
+                          'Thanh lý',
+                          style: TextStyle(color: Colors.green, fontSize: 12),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -221,18 +257,18 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
             ),
           ),
           const SizedBox(height: 12),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Đối tượng',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
                 Row(
                   children: [
+                    Text(
+                      'Đối tượng',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(width: 70),
                     Icon(Icons.circle_outlined),
                     SizedBox(width: 8),
                     Text('Nữ'),
@@ -247,46 +283,120 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                   'Dịch vụ có phí',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                Text('Dữ liệu trống', style: TextStyle(color: Colors.grey)),
+                const SizedBox(height: 8),
+                Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Dữ liệu trống',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 16),
                 Text(
                   'Dịch vụ miễn phí',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                Text('Dữ liệu trống', style: TextStyle(color: Colors.grey)),
+                const SizedBox(height: 8),
+                Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Dữ liệu trống',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 16),
                 Text(
                   'Tiện ích phòng',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
-                Chip(label: Text('Khoá từ'), backgroundColor: Colors.green),
+                Chip(
+                  label: Text('Khoá từ', style: TextStyle(color: Colors.white)),
+                  backgroundColor: Colors.green,
+                  side: BorderSide.none,
+                ),
                 SizedBox(height: 16),
                 Text('Nội thất', style: TextStyle(fontWeight: FontWeight.bold)),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Icon(Icons.circle_outlined),
-                    SizedBox(width: 8),
-                    Text('Không'),
-                    SizedBox(width: 16),
-                    Icon(Icons.check_circle, color: Colors.green),
-                    SizedBox(width: 8),
-                    Text('Cơ bản'),
-                    SizedBox(width: 16),
-                    Icon(Icons.circle_outlined),
-                    SizedBox(width: 8),
-                    Text('Đầy đủ'),
+                    Row(
+                      children: [
+                        Icon(Icons.circle_outlined),
+                        SizedBox(width: 8),
+                        Text('Không'),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        SizedBox(width: 16),
+                        Icon(Icons.check_circle, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text('Cơ bản'),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        SizedBox(width: 16),
+                        Icon(Icons.circle_outlined),
+                        SizedBox(width: 8),
+                        Text('Đầy đủ'),
+                      ],
+                    ),
                   ],
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 26),
                 Text(
                   'Mô tả phòng (dùng cho dãy phòng)',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
-                TextField(
-                  maxLines: 3,
-                  decoration: InputDecoration(border: OutlineInputBorder()),
+                Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
                 ),
                 SizedBox(height: 16),
                 Text(
@@ -294,10 +404,46 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
-                TextField(
-                  maxLines: 3,
-                  decoration: InputDecoration(border: OutlineInputBorder()),
+                Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
                 ),
+
+                const SizedBox(height: 32),
+                Container(
+                  height: 50,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {},
+                    child: const Text(
+                      'Xóa phòng',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
               ],
             ),
           ),

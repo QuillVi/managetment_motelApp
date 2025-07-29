@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/detail_room_in_building.dart';
-import 'package:motelapp/router/app_router.dart';
 
 class ListRoomInBuilding extends StatefulWidget {
   const ListRoomInBuilding({super.key});
@@ -256,12 +254,12 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
           // Vị trí
           Row(
             children: const [
-              Icon(Icons.location_on, size: 18, color: Colors.grey),
+              Icon(Icons.location_on_outlined, size: 18, color: Colors.black),
               SizedBox(width: 5),
               Expanded(
                 child: Text(
                   "hhhh, Quận 8, Hồ Chí Minh",
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(color: Colors.black),
                 ),
               ),
             ],
@@ -353,8 +351,12 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: Column(
@@ -362,7 +364,10 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
                     CircleAvatar(radius: 20, child: Icon(Icons.person)),
                     SizedBox(height: 8),
                     Text("vi", style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text("0846941020", style: TextStyle(color: Colors.green)),
+                    Text(
+                      "0846941020",
+                      style: TextStyle(color: Colors.green, fontSize: 12),
+                    ),
                   ],
                 ),
               ),
@@ -378,16 +383,42 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
           const SizedBox(height: 12),
           Row(
             children: [
-              ServiceCard(
-                icon: Icons.wifi,
-                title: "wifi",
-                price: "300.000 đ/Người",
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ServiceCard(
+                  icon: Icons.wifi,
+                  title: "wifi",
+                  price: "300.000 đ/Người",
+                ),
               ),
               SizedBox(width: 12),
-              ServiceCard(
-                icon: Icons.ac_unit,
-                title: "Máy lạnh",
-                price: "300.000 đ/Phòng",
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ServiceCard(
+                  icon: Icons.ac_unit,
+                  title: "Máy lạnh",
+                  price: "300.000 đ/Phòng",
+                ),
               ),
             ],
           ),
@@ -399,7 +430,28 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text("Dữ liệu trống", style: TextStyle(color: Colors.grey)),
+          Container(
+            height: 150,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "Dữ liệu trống",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ),
           const SizedBox(height: 24),
 
           // --- Tiện ích tòa nhà ---
@@ -408,7 +460,28 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text("Dữ liệu trống", style: TextStyle(color: Colors.grey)),
+          Container(
+            height: 150,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "Dữ liệu trống",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
 
           // --- Lưu ý cho người thuê ---
@@ -417,18 +490,19 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          TextField(
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: Colors.white,
+          Container(
+            height: 50,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
@@ -439,18 +513,19 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          TextField(
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: Colors.white,
+          Container(
+            height: 50,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),

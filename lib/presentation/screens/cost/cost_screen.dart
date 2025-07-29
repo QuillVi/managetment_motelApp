@@ -209,6 +209,7 @@ class _CostScreenState extends State<CostScreen>
                           unselectedLabelColor: Colors.grey,
                           indicatorSize: TabBarIndicatorSize.label,
                           indicatorColor: Colors.green,
+                          dividerHeight: 0,
                           tabs: const [
                             Tab(icon: Icon(Icons.list)),
                             Tab(icon: Icon(Icons.show_chart)),
