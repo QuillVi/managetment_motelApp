@@ -54,7 +54,7 @@ class AppTheme {
     ),
 
     // Message Bubbles
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: primaryColor.withOpacity(0.1),
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
