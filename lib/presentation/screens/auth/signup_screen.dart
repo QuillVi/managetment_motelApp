@@ -19,33 +19,39 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController nameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
+  final TextEditingController birthdayController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
 
   final _nameFocus = FocusNode();
+  final _birthdayFocus = FocusNode();
   final _usernameFocus = FocusNode();
   final _emailFocus = FocusNode();
   final _phoneFocus = FocusNode();
+  final _addressFocus = FocusNode();
   final _passwordFocus = FocusNode();
 
   @override
   void dispose() {
     emailController.dispose();
-    nameController.dispose();
     usernameController.dispose();
     phoneController.dispose();
     passwordController.dispose();
+    birthdayController.dispose();
+    addressController.dispose();
 
     _nameFocus.dispose();
     _usernameFocus.dispose();
     _emailFocus.dispose();
     _phoneFocus.dispose();
     _passwordFocus.dispose();
+    _birthdayFocus.dispose();
+    _addressFocus.dispose();
 
     super.dispose();
   }
@@ -99,17 +105,39 @@ class _SignupScreenState extends State<SignupScreen> {
     }
     return null;
   }
+  // Birthday validation
+  String? _validateBirthday(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your birthday';
+    }
+    final birthdayRegex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+    if (!birthdayRegex.hasMatch(value)) {
+      return 'Please enter a valid birthday (e.g., 1990-01-01)';
+    }
+    return null;
+  }
+  // Address validation
+  String? _validateAddress(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your address';
+    }
+    if (value.length < 5) {
+      return 'Address must be at least 5 characters long';
+    }
+    return null;
+  }
 
   Future<void> handleSignUp() async {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        await getIt<AuthCubit>().signUp(
-          fullName: nameController.text,
-          userName: usernameController.text,
-          email: emailController.text,
-          phoneNumber: phoneController.text,
-          password: passwordController.text,
+        await getIt<AuthCubit>().register(
+          ten: usernameController.text.trim(),
+          ngaysinh: birthdayController.text.trim(), 
+          sdt: phoneController.text.trim(),
+          diachi: addressController.text.trim(), 
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
         );
       } catch (e) {
         ScaffoldMessenger.of(
@@ -162,19 +190,19 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(height: 30),
                     CustomTextField(
-                      controller: nameController,
-                      focusNode: _nameFocus,
-                      hintText: "Full Name",
-                      validator: _validateName,
-                      prefixIcon: const Icon(Icons.person_outline),
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
                       controller: usernameController,
                       hintText: "Username",
                       focusNode: _usernameFocus,
                       validator: _validateUsername,
-                      prefixIcon: const Icon(Icons.alternate_email),
+                      prefixIcon: const Icon(Icons.person_outline),
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: birthdayController,
+                      focusNode: _birthdayFocus,
+                      hintText: "Birthday",
+                      validator:  _validateBirthday,
+                      prefixIcon: const Icon(Icons.calendar_today_outlined),
                     ),
                     const SizedBox(height: 16),
                     CustomTextField(
@@ -191,6 +219,14 @@ class _SignupScreenState extends State<SignupScreen> {
                       focusNode: _phoneFocus,
                       validator: _validatePhone,
                       prefixIcon: const Icon(Icons.phone_outlined),
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: addressController,
+                      hintText: "Address",
+                      focusNode: _addressFocus,
+                      validator: _validateAddress,
+                      prefixIcon: const Icon(Icons.home_outlined),
                     ),
                     const SizedBox(height: 16),
                     CustomTextField(

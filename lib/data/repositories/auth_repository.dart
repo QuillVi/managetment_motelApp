@@ -1,130 +1,131 @@
-import 'dart:developer';
-
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dio/dio.dart';
 import 'package:motelapp/data/models/user_model.dart';
-import 'package:motelapp/data/services/base_repository.dart';
+import 'package:motelapp/data/services/dio_client.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class AuthRepository extends BaseRepository {
-  Stream<User?> get authStateChanges => auth.authStateChanges();
-  Future<UserModel> signUp({
-    required String fullName,
-    required String userName,
-    required String email,
-    required String phoneNumber,
-    required String password,
-  }) async {
-    try {
-      final formattedPhoneNumber = phoneNumber.replaceAll(
-        RegExp(r'\s+'),
-        ''.trim(),
-      );
+class AuthRepository {
+  final Dio _dio = DioClient().dio;
 
-      final emailExists = await checkEmailExists(email);
-      if (emailExists) {
-        throw "An account with the same email already exists";
-      }
-
-      final phoneNumberExists = await checkPhoneExists(formattedPhoneNumber);
-      if (phoneNumberExists) {
-        throw "An account with the same phone already exists";
-      }
-
-      final userCredential = await auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      if (userCredential.user == null) {
-        throw "Failed to create user ";
-      }
-
-      // create user model and save the user in the db firestore
-      final user = UserModel(
-        uId: userCredential.user!.uid,
-        userName: userName,
-        fullName: fullName,
-        email: email,
-        phoneNumber: phoneNumber,
-      );
-
-      await saveUserData(user);
-      return user;
-    } catch (e) {
-      log(e.toString());
-      rethrow;
-    }
-  }
-
-  Future<bool> checkEmailExists(String email) async {
-    try {
-      final methods = await auth.fetchSignInMethodsForEmail(email);
-      return methods.isNotEmpty;
-    } catch (e) {
-      print("Error checking email: $e");
-      return false;
-    }
-  }
-
-  Future<bool> checkPhoneExists(String phoneNumber) async {
-    try {
-      final formattedPhoneNumber = phoneNumber.replaceAll(
-        RegExp(r'\s+'),
-        ''.trim(),
-      );
-      final querySnapshot =
-          await firestore
-              .collection("users")
-              .where("phoneNumber", isEqualTo: formattedPhoneNumber)
-              .get();
-
-      return querySnapshot.docs.isNotEmpty;
-    } catch (e) {
-      print("Error checking email: $e");
-      return false;
-    }
-  }
-
-  Future<UserModel> signIn({
+  /// ✅ Đăng nhập
+  Future<UserModel> login({
     required String email,
     required String password,
   }) async {
     try {
-      final userCredential = await auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      if (userCredential.user == null) {
-        throw "User not found";
+      final response = await _dio.post('/login', data: {
+        'email': email,
+        'password': password,
+      });
+
+      final data = response.data;
+
+      if (data['success'] == true && data['user'] != null) {
+        final user = UserModel.fromMap(data['user']);
+        await saveUserData(
+          id: int.parse(user.id_nguoidung),
+          email: user.email,
+          ten: user.ten ?? '',
+          vaitro: user.vaitro ?? '',
+          token: user.token ?? '',
+        );
+        return user;
+      } else {
+        throw Exception(data['message'] ?? 'Đăng nhập thất bại');
       }
-      final userData = await getUserData(userCredential.user!.uid);
-      return userData;
-    } catch (e) {
-      log(e.toString());
-      rethrow;
+    } on DioError catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Lỗi mạng');
     }
   }
 
-  Future<void> saveUserData(UserModel user) async {
+  /// ✅ Đăng ký
+  Future<UserModel> register({
+    required String ten,
+    required String ngaysinh,
+    required String sdt,
+    required String diachi,
+    required String email,
+    required String password,
+  }) async {
     try {
-      firestore.collection("users").doc(user.uId).set(user.toMap());
-    } catch (e) {
-      throw "Failed to save user data";
+      final response = await _dio.post('/register', data: {
+        'ten': ten,
+        'ngaysinh': ngaysinh,
+        'sdt': sdt,
+        'diachi': diachi,
+        'email': email,
+        'password': password,
+      });
+
+      final data = response.data;
+
+      if (data['success'] == true && data['user'] != null) {
+        final user = UserModel.fromMap(data['user']);
+        await saveUserData(
+          id:int.parse(user.id_nguoidung),
+          email: user.email,
+          ten: user.ten ?? '',
+          vaitro: user.vaitro ?? '',
+          token: user.token ?? '',
+        );
+        return user;
+      } else {
+        throw Exception(data['message'] ?? 'Đăng ký thất bại');
+      }
+    } on DioError catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Lỗi mạng');
     }
   }
 
+  /// ✅ Lưu thông tin người dùng
+  Future<void> saveUserData({
+    required int id,
+    required String email,
+    required String ten,
+    required String vaitro,
+    required String token,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('id', id);
+    await prefs.setString('email', email);
+    await prefs.setString('ten', ten);
+    await prefs.setString('vaitro', vaitro);
+    await prefs.setString('token', token);
+  }
+
+  /// ✅ Xoá thông tin khi đăng xuất
   Future<void> signOut() async {
-    await auth.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('id');
+    await prefs.remove('email');
+    await prefs.remove('ten');
+    await prefs.remove('vaitro');
+    await prefs.remove('token');
   }
 
-  Future<UserModel> getUserData(String uId) async {
-    try {
-      final doc = await firestore.collection("users").doc(uId).get();
-      if (!doc.exists) {
-        throw "User not found";
-      }
-      //log(doc.id);
-      return UserModel.fromFirestore(doc);
-    } catch (e) {
-      throw "Failed to save user data";
-    }
+  /// ✅ Lấy token
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  /// ✅ Các getter khác
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('id');
+  }
+
+  Future<String?> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('email');
+  }
+
+  Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('ten');
+  }
+
+  Future<String?> getUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('vaitro');
   }
 }

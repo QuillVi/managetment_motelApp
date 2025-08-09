@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:motelapp/data/models/building_model.dart';
 import 'package:motelapp/data/services/service_locator.dart';
+import 'package:motelapp/logic/cubits/building/list_building_cubit.dart';
+import 'package:motelapp/logic/cubits/building/list_building_state.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/list_room_in_building.dart';
 import 'package:motelapp/router/app_router.dart';
 
@@ -12,22 +16,26 @@ class BuildingScreen extends StatefulWidget {
 
 class _BuildingScreenState extends State<BuildingScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Gọi API khi mở màn hình
+    context.read<ListBuildingCubit>().loadBuildings();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Scaffold(
           appBar: AppBar(
             title: const Text(
-              'Toà nhà',
+              'Tòa nhà',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(
-                  Icons.filter_alt_outlined,
-                  color: Colors.orange,
-                ),
+                icon: const Icon(Icons.filter_alt_outlined, color: Colors.orange),
                 onPressed: () {},
               ),
               IconButton(
@@ -36,28 +44,38 @@ class _BuildingScreenState extends State<BuildingScreen> {
               ),
             ],
           ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  'Hồ Chí Minh (1)',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildBuildingCard(),
-              ),
-            ],
+          body: BlocBuilder<ListBuildingCubit, ListBuildingState>(
+            builder: (context, state) {
+             if (state.status == ListBuildingStatus.loaded && state.data != null) {
+  final buildings = state.data!;
+  return GridView.builder(
+    padding: const EdgeInsets.all(16),
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2, // 2 cột
+      crossAxisSpacing: 24, // khoảng cách ngang giữa các cột
+      mainAxisSpacing: 16,  // khoảng cách dọc giữa các hàng
+      childAspectRatio: 1, // tỉ lệ khung (rộng / cao)
+    ),
+    itemCount: buildings.length,
+    itemBuilder: (context, index) {
+      final b = buildings[index];
+      return _buildBuildingCard(b);
+    },
+  );
+}
+
+              return  SizedBox.shrink();
+            },
           ),
         ),
+        // Nút thêm mới
         Positioned(
           bottom: 60,
           right: 24,
           child: GestureDetector(
-            onTap: () {},
+            onTap: () {
+              
+            },
             child: Container(
               width: 60,
               height: 60,
@@ -80,8 +98,8 @@ class _BuildingScreenState extends State<BuildingScreen> {
     );
   }
 
-  /// Thẻ hiển thị toà nhà
-  Widget _buildBuildingCard() {
+  /// Card hiển thị thông tin tòa nhà
+  Widget _buildBuildingCard(BuildingModel building) {
     return GestureDetector(
       onTap: () {
         getIt<AppRouter>().push(ListRoomInBuilding());
@@ -98,18 +116,18 @@ class _BuildingScreenState extends State<BuildingScreen> {
           children: [
             const Icon(Icons.house, size: 48, color: Colors.grey),
             const SizedBox(height: 8),
-            const Text(
-              'vi',
-              style: TextStyle(
+            Text(
+              building.tentoanha,
+              style: const TextStyle(
                 color: Colors.green,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'hhhh, Quận 8, Hồ Chí Minh',
+            Text(
+              building.diachi_toanha,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black87),
+              style: const TextStyle(color: Colors.black87),
             ),
           ],
         ),

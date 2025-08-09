@@ -1,87 +1,93 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:async';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:motelapp/data/models/user_model.dart';
 import 'package:motelapp/data/repositories/auth_repository.dart';
-import 'package:motelapp/logic/cubits/auth/auth_state.dart';
+import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  final AuthRepository _authRepository;
-  StreamSubscription<User?>? _authStateSubscription;
-  AuthCubit({required AuthRepository authRepository})
-    : _authRepository = authRepository,
-      super(const AuthState()) {
-    _init();
+  final AuthRepository authRepository;
+
+  AuthCubit({required this.authRepository}) : super(const AuthState());
+
+  Future<void> login({
+  required String email,
+  required String password,
+}) async {
+  emit(state.copyWith(status: AuthStatus.loading));
+  try {
+    final user = await authRepository.login(
+      email: email,
+      password: password,
+    );
+    emit(state.copyWith(
+      status: AuthStatus.authenticated,
+      user: user,
+      error: null,
+    ));
+  } catch (e) {
+    emit(state.copyWith(
+      status: AuthStatus.error,
+      error: e.toString(),
+    ));
   }
-
-  void _init() {
-    emit(state.copyWith(status: AuthStatus.initial));
-
-    _authStateSubscription = _authRepository.authStateChanges.listen((
-      user,
-    ) async {
-      if (user != null) {
-        try {
-          final userData = await _authRepository.getUserData(user.uid);
-          emit(
-            state.copyWith(status: AuthStatus.authenticated, user: userData),
-          );
-        } catch (e) {
-          emit(state.copyWith(status: AuthStatus.error, error: e.toString()));
-        }
-      } else {
-        emit(state.copyWith(status: AuthStatus.unauthenticated));
-      }
-    });
-  }
-
-  Future<void> signIn({required String email, required String password}) async {
-    try {
-      emit(state.copyWith(status: AuthStatus.loading));
-
-      final user = await _authRepository.signIn(
-        email: email,
-        password: password,
-      );
-
-      emit(state.copyWith(status: AuthStatus.authenticated, user: user));
-    } catch (e) {
-      emit(state.copyWith(status: AuthStatus.error, error: e.toString()));
-    }
-  }
-
-  Future<void> signUp({
-    required String fullName,
-    required String userName,
+}
+  Future<void> register({
+    required String ten,
+    required String ngaysinh,
+    required String sdt,
+    required String diachi,
     required String email,
-    required String phoneNumber,
     required String password,
   }) async {
+    emit(state.copyWith(status: AuthStatus.loading));
     try {
-      emit(state.copyWith(status: AuthStatus.loading));
-
-      final user = await _authRepository.signUp(
-        fullName: fullName,
-        userName: userName,
+      final user = await authRepository.register(
         email: email,
-        phoneNumber: phoneNumber,
         password: password,
+        ten: ten,
+        ngaysinh: ngaysinh,
+        sdt: sdt,
+        diachi: diachi,
       );
-
-      emit(state.copyWith(status: AuthStatus.authenticated, user: user));
+      emit(state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        error: null,
+      ));
     } catch (e) {
-      emit(state.copyWith(status: AuthStatus.error, error: e.toString()));
+      emit(state.copyWith(
+        status: AuthStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
-  Future<void> signOut() async {
-    try {
-      await _authRepository.signOut();
-      emit(state.copyWith(status: AuthStatus.unauthenticated, user: null));
-    } catch (e) {
-      emit(state.copyWith(status: AuthStatus.error, error: e.toString()));
-    }
+  Future<void> logout() async {
+    await authRepository.signOut();
+    emit(const AuthState(status: AuthStatus.unauthenticated));
   }
+
+ Future<void> tryAutoLogin() async {
+  final token = await authRepository.getToken();
+  final ten = await authRepository.getUserName();
+
+  if (token != null) {
+    emit(state.copyWith(
+      status: AuthStatus.authenticated,
+      user: UserModel(
+        id_nguoidung: '',     
+        email: '',            
+        ten: ten ?? 'Người dùng',
+        vaitro: '',           
+        token: token,
+      ),
+    ));
+  } else {
+    emit(const AuthState(status: AuthStatus.unauthenticated));
+  }
+}
+
+
+
+
+  
 }

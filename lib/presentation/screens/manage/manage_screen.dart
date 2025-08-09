@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:motelapp/data/services/service_locator.dart';
+import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
+import 'package:motelapp/presentation/screens/auth/login_screen.dart';
+import 'package:motelapp/router/app_router.dart';
 
 class ManageScreen extends StatefulWidget {
   const ManageScreen({super.key});
@@ -270,12 +274,43 @@ class _ManageScreenState extends State<ManageScreen> {
                             ),
                           ],
                         ),
+                        
                       ],
+                      
                     ),
                   ),
                 ),
               ),
+            const SizedBox(height: 24),
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16), // padding lề trái phải
+  child: SizedBox(
+    width: double.infinity,
+    child: ElevatedButton(
+      onPressed: ( )async {
+        await getIt<AuthCubit>().logout();
+
+        getIt<AppRouter>().pushAndRemoveUntil(
+          const LoginScreen(),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red, // Màu nền đỏ
+        padding: const EdgeInsets.symmetric(vertical: 16), // padding dọc
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: const Text(
+        'Đăng xuất',
+        style: TextStyle(color: Colors.white),
+      ),
+    ),
+  ),
+   ),
+
             ],
+            //Nút đăng xuất
           ),
         ),
       ),

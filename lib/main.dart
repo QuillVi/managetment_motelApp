@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:motelapp/config/theme/app_theme.dart';
 import 'package:motelapp/data/services/service_locator.dart';
-import 'package:motelapp/presentation/screens/auth/login_screen.dart';
+import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
+import 'package:motelapp/logic/cubits/building/list_building_cubit.dart';
+import 'package:motelapp/logic/cubits/home/statistical_cubit.dart';
+import 'package:motelapp/presentation/splash_screen.dart';
 import 'package:motelapp/router/app_router.dart';
 
 void main() async {
@@ -14,12 +18,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Motel App',
-      navigatorKey: getIt<AppRouter>().navigatorKey,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+    return MultiBlocProvider(
+      providers: [
+        // BlocProvider for AuthCubit
+        BlocProvider<AuthCubit>(
+          create: (_) => getIt<AuthCubit>(),
+        ),
+        // BlocProvider for StatisticalCubit in Home
+         BlocProvider<StatisticalCubit>(
+          create: (_) => getIt<StatisticalCubit>()..loadStatistics(),
+         ),
+        // BlocProvider for ListBuildingCubit
+        BlocProvider<ListBuildingCubit>(
+          create: (_) => getIt<ListBuildingCubit>()..loadBuildings(),
+        ),
+
+
+        // BlocProvider<AnotherCubit>(
+        //   create: (_) => getIt<AnotherCubit>(),
+        // ),
+      ],
+      child: MaterialApp(
+        title: 'Motel App',
+        navigatorKey: getIt<AppRouter>().navigatorKey,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: const SplashScreen(),
+      ),
     );
   }
 }

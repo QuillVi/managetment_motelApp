@@ -61,9 +61,9 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        await getIt<AuthCubit>().signIn(
-          email: emailController.text,
-          password: passwordController.text,
+        await getIt<AuthCubit>().login(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
         );
       } catch (e) {
         ScaffoldMessenger.of(

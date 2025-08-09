@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:motelapp/data/services/service_locator.dart';
+import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
+import 'package:motelapp/logic/cubits/home/statistical_cubit.dart';
+import 'package:motelapp/logic/cubits/home/statistical_state.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_bill_home/bill_home.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_contract_home/contract_home.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_eletricwater_home/electricwater_home.dart';
@@ -80,8 +84,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+ 
+
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthCubit>().state.user;
+    final ten = user?.ten?.isNotEmpty == true ? user!.ten! : 'Người dùng';
+    print('Tên người dùng: $ten');
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
@@ -109,13 +118,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children:  [
                           Text(
                             'Xin chào',
                             style: TextStyle(fontSize: 14, color: Colors.white),
                           ),
                           Text(
-                            'vi',
+                           ten ?? 'Người dùng',
+                           
                             style: TextStyle(
                               fontSize: 22,
                               color: Colors.white,
@@ -169,23 +179,44 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        _infoBox('Số toà nhà', '1'),
-                        _infoBox('Số phòng', '1'),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        _infoBox('Số người thuê', '1'),
-                        _infoBox('Số phòng trống', '0'),
-                      ],
-                    ),
-                  ],
-                ),
+                child: BlocBuilder<StatisticalCubit, StatisticalState>(
+  builder: (context, state) {
+    if (state.status == StatisticalStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.status == StatisticalStatus.error) {
+      return Center(child: Text('Lỗi: ${state.error}'));
+    }
+
+    final data = state.data;
+    //print('Data: $data');
+
+    if (data == null) return const SizedBox(
+      height: 100,
+      child: Center(child: Text('Không có dữ liệu thống kê')),
+    );
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Column(
+          children: [
+            _infoBox('Số toà nhà', data.soToaNha.toString()),
+            _infoBox('Số phòng', data.soPhong.toString()),
+          ],
+        ),
+        Column(
+          children: [
+            _infoBox('Số người thuê', data.tongSoNguoiThue.toString()),
+            _infoBox('Số phòng trống', data.soPhongTrong.toString()),
+          ],
+        ),
+      ],
+    );
+  },
+)
+
               ),
             ),
           ],

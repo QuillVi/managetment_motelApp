@@ -1,66 +1,54 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class UserModel {
-  final String uId;
-  final String userName;
-  final String fullName;
+  final String id_nguoidung;
+  final String ten;
   final String email;
-  final String phoneNumber;
-  final Timestamp createdAt;
-  final String? fcmToken;
+  final String vaitro;
+  final String? token;
 
   UserModel({
-    required this.uId,
-    required this.userName,
-    required this.fullName,
+    required this.id_nguoidung,
+    required this.ten,
     required this.email,
-    required this.phoneNumber,
-    Timestamp? createdAt,
-    this.fcmToken,
-  }) : createdAt = createdAt ?? Timestamp.now();
+    required this.vaitro,
+    this.token,
+  });
 
-  UserModel copyWith({
-    String? uId,
-    String? userName,
-    String? fullName,
+
+
+    UserModel copyWith({
+    String? id_nguoidung,
+    String? ten,
     String? email,
-    String? phoneNumber,
-    Timestamp? createdAt,
-    String? fcmToken,
+    String? vaitro,
+    String? token,
   }) {
     return UserModel(
-      uId: uId ?? this.uId,
-      userName: userName ?? this.userName,
-      fullName: fullName ?? this.fullName,
+      id_nguoidung: id_nguoidung ?? this.id_nguoidung,
+      ten: ten ?? this.ten,
       email: email ?? this.email,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      createdAt: createdAt ?? this.createdAt,
-      fcmToken: fcmToken ?? this.fcmToken,
+      vaitro: vaitro ?? this.vaitro,
+      token: token ?? this.token,
     );
   }
 
-  factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      uId: doc.id,
-      userName: data['userName'] ?? '',
-      fullName: data['fullName'] ?? '',
-      email: data['email'] ?? '',
-      phoneNumber: data['phoneNumber'] ?? '',
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      fcmToken: data['fcmToken'],
+      id_nguoidung: map['id_nguoidung'].toString(), 
+      ten: map['ten'] as String,
+      email: map['email'],
+      vaitro: map['vaitro'],
+      token: map['token'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'uId': uId,
-      'userName': userName,
-      'fullName': fullName,
+      'id_nguoidung': id_nguoidung,
+      'ten': ten,
       'email': email,
-      'phoneNumber': phoneNumber,
-      'createdAt': createdAt,
-      'fcmToken': fcmToken,
+      'vaitro': vaitro,
+      'token': token,
     };
   }
 }
+
