@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:motelapp/data/services/service_locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:motelapp/data/models/room_model.dart';
+import 'package:motelapp/logic/cubits/building/room_in_building/room_in_building_cubit.dart';
+import 'package:motelapp/logic/cubits/building/room_in_building/room_in_building_state.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/detail_room_in_building.dart';
-import 'package:motelapp/router/app_router.dart';
 
 class ListRoomInBuilding extends StatefulWidget {
-  const ListRoomInBuilding({super.key});
+  final int buildingId;
+  final String buildingName;
+  const ListRoomInBuilding({
+    super.key,
+    required this.buildingId,
+    required this.buildingName,
+  });
 
   @override
   State<ListRoomInBuilding> createState() => _ListRoomInBuildingState();
 }
 
 class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
+  @override
+  void initState() {
+    super.initState();
+    // Gọi API khi mở màn hình
+    context.read<RoomInBuildingCubit>().loadRoomsInBuilding(widget.buildingId);
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -28,7 +43,10 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
           centerTitle: true,
           title: Column(
             children: [
-              const Text('vi', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                widget.buildingName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           actions: [
@@ -162,69 +180,75 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
     );
   }
 
-  /// Hàm xây dựng danh sách phòng dưới dạng lưới có thể cuộn
+  /// Hàm xây dựng danh sách phòng dưới dạng lưới có thể cuộn (dữ liệu từ Cubit)
   Widget _buildRoomCard() {
-    // Đây là dữ liệu mẫu. Trong ứng dụng thực tế, bạn sẽ thay thế bằng dữ liệu từ API.
-    // Giả sử bạn có 20 phòng để minh họa khả năng cuộn
-    final List<Map<String, dynamic>> roomsData = List.generate(
-      20, // Số lượng phòng giả định
-      (index) => {
-        'roomNumber': 'Phòng ${index + 1}',
-        'price': '${(3000000 + index * 100000).toStringAsFixed(0)} đ',
-        'tenants': index % 3 + 1,
-        'contracts': index % 2 + 1,
-        'warnings': index % 4,
-        'statusDeposit': index % 5 == 0 ? 'Đã cọc' : null,
-        'statusRented': index % 3 == 0 ? 'ĐÃ THUÊ' : null,
-      },
-    );
+    return BlocBuilder<RoomInBuildingCubit, RoomInBuildingState>(
+      builder: (context, state) {
+        if (state.status == RoomInBuildingStatus.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return Column(
-      // Column để chứa TextField tìm kiếm và GridView các phòng
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: 'Tìm kiếm theo hợp đồng, phòng...',
-              filled: true,
-              fillColor: Colors.grey.shade200,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+        if (state.status == RoomInBuildingStatus.error) {
+          // Hiển thị thông báo lỗi nếu có
+          print("Error: ${state.error}");
+          return Center(child: Text("Lỗi: ${state.error}"));
+        }
+
+        if (state.status == RoomInBuildingStatus.loaded && state.data != null) {
+          final rooms = state.data!; // List<RoomModel>
+
+          return Column(
+            children: [
+              // Ô tìm kiếm
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    hintText: 'Tìm kiếm theo tên phòng...',
+                    filled: true,
+                    fillColor: Colors.grey.shade200,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    // TODO: nếu bạn muốn lọc dữ liệu theo value thì có thể implement thêm Cubit filter
+                  },
+                ),
               ),
-            ),
-          ),
-        ),
-        // Expanded giúp GridView chiếm hết chiều cao còn lại của Column
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(12), // Padding cho toàn bộ lưới
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3, // 3 phòng trên mỗi dòng
-              crossAxisSpacing: 10.0, // Khoảng cách giữa các cột
-              mainAxisSpacing: 10.0, // Khoảng cách giữa các hàng
-              childAspectRatio: 0.7, // Tỷ lệ chiều rộng/chiều cao của mỗi item.
-              // Bạn có thể điều chỉnh giá trị này (ví dụ: 0.7, 0.75, 0.8)
-              // để các thẻ phòng không bị tràn hoặc quá trống.
-            ),
-            itemCount: roomsData.length, // Số lượng phòng từ dữ liệu
-            itemBuilder: (context, index) {
-              final room = roomsData[index];
-              return _buildSingleRoomCard(
-                roomNumber: room['roomNumber'] as String,
-                price: room['price'] as String,
-                tenants: room['tenants'] as int,
-                contracts: room['contracts'] as int,
-                warnings: room['warnings'] as int,
-                statusDeposit: room['statusDeposit'] as String?,
-                statusRented: room['statusRented'] as String?,
-              );
-            },
-          ),
-        ),
-      ],
+              // Lưới hiển thị phòng
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(12),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10.0,
+                    mainAxisSpacing: 10.0,
+                    childAspectRatio: 0.7,
+                  ),
+                  itemCount: rooms.length,
+                  itemBuilder: (context, index) {
+                    final room = rooms[index];
+                    return _buildSingleRoomCard(
+                      roomNumber: room.tenPhong,
+                      price: "${room.giaPhong.toStringAsFixed(0)} đ",
+                      tenants: room.soNguoiThue,
+                      contracts: 1, // nếu API có hợp đồng thì thay vào đây
+                      warnings: 0, // nếu API có cảnh báo thì thay vào đây
+                      statusDeposit: room.tienDatCoc > 0 ? "Đã cọc" : null,
+                      statusRented: room.soNguoiThue > 0 ? "ĐÃ THUÊ" : null,
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+
+        return const SizedBox(); // Trạng thái initial
+      },
     );
   }
 

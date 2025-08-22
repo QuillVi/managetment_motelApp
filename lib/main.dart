@@ -4,6 +4,7 @@ import 'package:motelapp/config/theme/app_theme.dart';
 import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
 import 'package:motelapp/logic/cubits/building/list_building_cubit.dart';
+import 'package:motelapp/logic/cubits/building/room_in_building/room_in_building_cubit.dart';
 import 'package:motelapp/logic/cubits/home/statistical_cubit.dart';
 import 'package:motelapp/presentation/splash_screen.dart';
 import 'package:motelapp/router/app_router.dart';
@@ -21,18 +22,19 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         // BlocProvider for AuthCubit
-        BlocProvider<AuthCubit>(
-          create: (_) => getIt<AuthCubit>(),
-        ),
+        BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>()),
         // BlocProvider for StatisticalCubit in Home
-         BlocProvider<StatisticalCubit>(
+        BlocProvider<StatisticalCubit>(
           create: (_) => getIt<StatisticalCubit>()..loadStatistics(),
-         ),
+        ),
         // BlocProvider for ListBuildingCubit
         BlocProvider<ListBuildingCubit>(
           create: (_) => getIt<ListBuildingCubit>()..loadBuildings(),
         ),
-
+        // BlocProvider for RoomInBuildingCubit
+        BlocProvider<RoomInBuildingCubit>(
+          create: (_) => getIt<RoomInBuildingCubit>(),
+        ),
 
         // BlocProvider<AnotherCubit>(
         //   create: (_) => getIt<AnotherCubit>(),

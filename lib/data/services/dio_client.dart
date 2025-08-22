@@ -11,28 +11,32 @@ class DioClient {
   late Dio dio;
 
   DioClient._internal() {
-    dio = Dio(BaseOptions(
-      baseUrl: 'http://172.21.12.117:3000/api', // Sửa nếu deploy
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      headers: {'Content-Type': 'application/json'},
-    ));
+    dio = Dio(
+      BaseOptions(
+        baseUrl: 'http://192.168.1.11:3000/api', // Sửa nếu deploy
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
 
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('token');
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final prefs = await SharedPreferences.getInstance();
+          final token = prefs.getString('token');
 
-        if (token != null && token.isNotEmpty) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
 
-        return handler.next(options);
-      },
-      onError: (DioError e, handler) {
-        // Log hoặc xử lý lỗi toàn cục ở đây
-        return handler.next(e);
-      },
-    ));
+          return handler.next(options);
+        },
+        onError: (DioError e, handler) {
+          // Log hoặc xử lý lỗi toàn cục ở đây
+          return handler.next(e);
+        },
+      ),
+    );
   }
 }

@@ -35,7 +35,10 @@ class _BuildingScreenState extends State<BuildingScreen> {
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.filter_alt_outlined, color: Colors.orange),
+                icon: const Icon(
+                  Icons.filter_alt_outlined,
+                  color: Colors.orange,
+                ),
                 onPressed: () {},
               ),
               IconButton(
@@ -46,25 +49,26 @@ class _BuildingScreenState extends State<BuildingScreen> {
           ),
           body: BlocBuilder<ListBuildingCubit, ListBuildingState>(
             builder: (context, state) {
-             if (state.status == ListBuildingStatus.loaded && state.data != null) {
-  final buildings = state.data!;
-  return GridView.builder(
-    padding: const EdgeInsets.all(16),
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2, // 2 cột
-      crossAxisSpacing: 24, // khoảng cách ngang giữa các cột
-      mainAxisSpacing: 16,  // khoảng cách dọc giữa các hàng
-      childAspectRatio: 1, // tỉ lệ khung (rộng / cao)
-    ),
-    itemCount: buildings.length,
-    itemBuilder: (context, index) {
-      final b = buildings[index];
-      return _buildBuildingCard(b);
-    },
-  );
-}
+              if (state.status == ListBuildingStatus.loaded &&
+                  state.data != null) {
+                final buildings = state.data!;
+                return GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, // 2 cột
+                    crossAxisSpacing: 24, // khoảng cách ngang giữa các cột
+                    mainAxisSpacing: 16, // khoảng cách dọc giữa các hàng
+                    childAspectRatio: 1, // tỉ lệ khung (rộng / cao)
+                  ),
+                  itemCount: buildings.length,
+                  itemBuilder: (context, index) {
+                    final b = buildings[index];
+                    return _buildBuildingCard(b);
+                  },
+                );
+              }
 
-              return  SizedBox.shrink();
+              return SizedBox.shrink();
             },
           ),
         ),
@@ -73,9 +77,7 @@ class _BuildingScreenState extends State<BuildingScreen> {
           bottom: 60,
           right: 24,
           child: GestureDetector(
-            onTap: () {
-              
-            },
+            onTap: () {},
             child: Container(
               width: 60,
               height: 60,
@@ -102,7 +104,16 @@ class _BuildingScreenState extends State<BuildingScreen> {
   Widget _buildBuildingCard(BuildingModel building) {
     return GestureDetector(
       onTap: () {
-        getIt<AppRouter>().push(ListRoomInBuilding());
+        final buildingId = building.id_toanha;
+        final buildingName = building.tentoanha;
+        print('Selected building ID: $buildingId');
+        print('Selected building Name: $buildingName');
+        getIt<AppRouter>().push(
+          ListRoomInBuilding(
+            buildingId: buildingId,
+            buildingName: buildingName,
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
