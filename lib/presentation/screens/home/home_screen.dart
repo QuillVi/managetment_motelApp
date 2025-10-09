@@ -84,13 +84,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
- 
-
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthCubit>().state.user;
-    final ten = user?.ten?.isNotEmpty == true ? user!.ten! : 'Người dùng';
-    print('Tên người dùng: $ten');
+    final ten = user?.ten.isNotEmpty == true ? user!.ten : 'Người dùng';
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
@@ -118,14 +115,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children:  [
+                        children: [
                           Text(
                             'Xin chào',
                             style: TextStyle(fontSize: 14, color: Colors.white),
                           ),
                           Text(
-                           ten ?? 'Người dùng',
-                           
+                            ten ?? 'Người dùng',
+
                             style: TextStyle(
                               fontSize: 22,
                               color: Colors.white,
@@ -180,43 +177,50 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 child: BlocBuilder<StatisticalCubit, StatisticalState>(
-  builder: (context, state) {
-    if (state.status == StatisticalStatus.loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+                  builder: (context, state) {
+                    if (state.status == StatisticalStatus.loading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-    if (state.status == StatisticalStatus.error) {
-      return Center(child: Text('Lỗi: ${state.error}'));
-    }
+                    if (state.status == StatisticalStatus.error) {
+                      return Center(child: Text('Lỗi: ${state.error}'));
+                    }
 
-    final data = state.data;
-    //print('Data: $data');
+                    final data = state.data;
+                    //print('Data: $data');
 
-    if (data == null) return const SizedBox(
-      height: 100,
-      child: Center(child: Text('Không có dữ liệu thống kê')),
-    );
+                    if (data == null) {
+                      return const SizedBox(
+                        height: 100,
+                        child: Center(child: Text('Không có dữ liệu thống kê')),
+                      );
+                    }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Column(
-          children: [
-            _infoBox('Số toà nhà', data.soToaNha.toString()),
-            _infoBox('Số phòng', data.soPhong.toString()),
-          ],
-        ),
-        Column(
-          children: [
-            _infoBox('Số người thuê', data.tongSoNguoiThue.toString()),
-            _infoBox('Số phòng trống', data.soPhongTrong.toString()),
-          ],
-        ),
-      ],
-    );
-  },
-)
-
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            _infoBox('Số toà nhà', data.soToaNha.toString()),
+                            _infoBox('Số phòng', data.soPhong.toString()),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            _infoBox(
+                              'Số người thuê',
+                              data.tongSoNguoiThue.toString(),
+                            ),
+                            _infoBox(
+                              'Số phòng trống',
+                              data.soPhongTrong.toString(),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ],

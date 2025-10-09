@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DetailTenant extends StatefulWidget {
-  const DetailTenant({super.key});
+  final int? lesseeId;
+  const DetailTenant({super.key, this.lesseeId});
 
   @override
   State<DetailTenant> createState() => _DetailTenantState();
@@ -12,7 +13,12 @@ class _DetailTenantState extends State<DetailTenant> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: const BackButton(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
         title: const Text(
           'Thông tin người thuê',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),

@@ -6,7 +6,7 @@ class ListRoomInBuildingRepository {
   final Dio dio = DioClient().dio;
 
   Future<List<RoomModel>> fetchRoomsInBuilding(int buildingId) async {
-    final response = await dio.get('/building/getRoomsByBuilding/$buildingId');
+    final response = await dio.get('/room/getRoomsByBuilding/$buildingId');
 
     if (response.statusCode == 200 && response.data['success'] == true) {
       final List<dynamic> data = response.data['data'];

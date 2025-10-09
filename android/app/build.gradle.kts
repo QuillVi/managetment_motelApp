@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.example.motelapp"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -23,16 +23,18 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.motelapp"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
-        targetSdk = 33
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-        multiDexEnabled = true
-    }
+    // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+    applicationId = "com.example.motelapp"
+
+    // You can update the following values to match your application needs.
+    // For more information, see: https://flutter.dev/to/review-gradle-config.
+    minSdk = flutter.minSdkVersion
+    targetSdk = 33
+    versionCode = flutter.versionCode
+    versionName = flutter.versionName
+    multiDexEnabled = true
+}
+
 
     buildTypes {
         release {

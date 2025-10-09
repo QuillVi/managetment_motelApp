@@ -12,10 +12,10 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      final response = await _dio.post('/login', data: {
-        'email': email,
-        'password': password,
-      });
+      final response = await _dio.post(
+        '/login',
+        data: {'email': email, 'mat_khau': password},
+      );
 
       final data = response.data;
 
@@ -32,7 +32,7 @@ class AuthRepository {
       } else {
         throw Exception(data['message'] ?? 'Đăng nhập thất bại');
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi mạng');
     }
   }
@@ -47,21 +47,24 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      final response = await _dio.post('/register', data: {
-        'ten': ten,
-        'ngaysinh': ngaysinh,
-        'sdt': sdt,
-        'diachi': diachi,
-        'email': email,
-        'password': password,
-      });
+      final response = await _dio.post(
+        '/register',
+        data: {
+          'ten': ten,
+          'ngaysinh': ngaysinh,
+          'sdt': sdt,
+          'diachi': diachi,
+          'email': email,
+          'password': password,
+        },
+      );
 
       final data = response.data;
 
       if (data['success'] == true && data['user'] != null) {
         final user = UserModel.fromMap(data['user']);
         await saveUserData(
-          id:int.parse(user.id_nguoidung),
+          id: int.parse(user.id_nguoidung),
           email: user.email,
           ten: user.ten ?? '',
           vaitro: user.vaitro ?? '',
@@ -71,7 +74,7 @@ class AuthRepository {
       } else {
         throw Exception(data['message'] ?? 'Đăng ký thất bại');
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi mạng');
     }
   }

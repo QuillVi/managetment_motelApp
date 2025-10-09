@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:motelapp/logic/cubits/building/room_in_building/detail_tanent_cubit.dart';
+import 'package:motelapp/logic/cubits/building/room_in_building/detail_tanent_state.dart';
 
 class DetailTanentInRoom extends StatefulWidget {
-  const DetailTanentInRoom({super.key});
+  final int idNguoiDung;
+  const DetailTanentInRoom({super.key, required this.idNguoiDung});
 
   @override
   State<DetailTanentInRoom> createState() => _DetailTanentInRoomState();
 }
 
 class _DetailTanentInRoomState extends State<DetailTanentInRoom> {
+  @override
+  void initState() {
+    super.initState();
+
+    context.read<DetailTanentCubit>().loadTanentDetail(widget.idNguoiDung);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,158 +45,207 @@ class _DetailTanentInRoomState extends State<DetailTanentInRoom> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Avatar + tên
-            Card(
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
+        child: BlocBuilder<DetailTanentCubit, DetailTanentState>(
+          builder: (context, state) {
+            if (state.status == DetailTanentStatus.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.status == DetailTanentStatus.error) {
+              return Center(child: Text("Lỗi: ${state.errorMessage}"));
+            }
+            if (state.status == DetailTanentStatus.loaded &&
+                state.detailTanent != null) {
+              final detailTanent = state.detailTanent!;
+              return Column(
+                children: [
+                  // Avatar + tên
+                  Card(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      const CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Colors.grey,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "huy",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: const [
-                          CircleAvatar(
-                            backgroundColor: Colors.purple,
-                            child: Icon(Icons.sms, color: Colors.white),
-                          ),
-                          CircleAvatar(
-                            backgroundColor: Colors.lightBlue,
-                            child: Icon(
-                              Icons.chat_bubble_outline,
-                              color: Colors.white,
-                            ),
-                          ),
-                          CircleAvatar(
-                            backgroundColor: Colors.green,
-                            child: Icon(Icons.phone, color: Colors.white),
+                    elevation: 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Thông tin chi tiết
-            Card(
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            const CircleAvatar(
+                              radius: 40,
+                              backgroundColor: Colors.grey,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              detailTanent.ten ?? "Người thuê",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: const [
+                                CircleAvatar(
+                                  backgroundColor: Colors.purple,
+                                  child: Icon(Icons.sms, color: Colors.white),
+                                ),
+                                CircleAvatar(
+                                  backgroundColor: Colors.lightBlue,
+                                  child: Icon(
+                                    Icons.chat_bubble_outline,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                CircleAvatar(
+                                  backgroundColor: Colors.green,
+                                  child: Icon(Icons.phone, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: const [
-                      ThongTinRow(label: "Email", value: "agsisv@gmail.com"),
-                      ThongTinRow(label: "Ngày sinh", value: "23-03-2025"),
-                      ThongTinRow(label: "Số điện thoại", value: "404640464"),
-                      ThongTinRow(label: "Phòng", value: "số 1 - vi"),
-                      ThongTinRow(label: "CMND/CCCD", value: "49484694"),
-                      ThongTinRow(label: "Ngày cấp", value: "21-03-2025"),
-                      ThongTinRow(label: "Nơi cấp", value: "Shaps s"),
-                      ThongTinRow(label: "Địa chỉ", value: "Sbshdjsb"),
-                    ],
                   ),
-                ),
-              ),
-            ),
 
-            const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-            // Ảnh CMND/CCCD (hiện chưa có ảnh, dùng làm placeholder)
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Ảnh CMND/CCCD",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              height: 150,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
+                  // Thông tin chi tiết
+                  Card(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            ThongTinRow(
+                              label: "Email",
+                              value: detailTanent.email ?? "chưa có email",
+                            ),
+                            ThongTinRow(
+                              label: "Ngày sinh",
+                              value:
+                                  detailTanent.ngaySinh ?? "chưa có ngày sinh",
+                            ),
+                            ThongTinRow(
+                              label: "Số điện thoại",
+                              value:
+                                  detailTanent.soDienThoai ??
+                                  "chưa có số điện thoại",
+                            ),
+                            ThongTinRow(
+                              label: "Phòng",
+                              value: detailTanent.phong ?? "chưa có phòng",
+                            ),
+                            ThongTinRow(
+                              label: "CMND/CCCD",
+                              value:
+                                  detailTanent.cmndCccd ?? "chưa có CMND/CCCD",
+                            ),
+                            ThongTinRow(
+                              label: "Ngày cấp",
+                              value: detailTanent.ngayCap ?? "chưa có ngày cấp",
+                            ),
+                            ThongTinRow(
+                              label: "Nơi cấp",
+                              value: detailTanent.noiCap ?? "chưa có nơi cấp",
+                            ),
+                            ThongTinRow(
+                              label: "Địa chỉ",
+                              value: detailTanent.diaChi ?? "chưa có địa chỉ",
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Ảnh CMND/CCCD (hiện chưa có ảnh, dùng làm placeholder)
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Ảnh CMND/CCCD",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.image, size: 50, color: Colors.grey),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // tao 1 button để xóa người thuê
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            12,
+                          ), // Bordered button
+                        ),
+                      ),
+                      child: const Text(
+                        'Xóa người thuê',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ],
-              ),
-              child: const Center(
-                child: Icon(Icons.image, size: 50, color: Colors.grey),
-              ),
-            ),
-            const SizedBox(height: 32),
-            // tao 1 button để xóa người thuê
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12), // Bordered button
-                  ),
-                ),
-                child: const Text(
-                  'Xóa người thuê',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-          ],
+              );
+            } else {
+              return const Center(child: Text('Không có dữ liệu'));
+            }
+          },
         ),
       ),
     );

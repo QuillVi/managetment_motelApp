@@ -1,35 +1,35 @@
 import 'package:flutter/material.dart';
 
 class AddImageService extends StatelessWidget {
-  final List<IconData> icons = [
-    Icons.lightbulb_outline,
-    Icons.flash_on,
-    Icons.water_drop,
-    Icons.elevator,
-    Icons.local_parking,
-    Icons.ac_unit,
-    Icons.directions_bike,
-    Icons.cabin,
-    Icons.directions_car,
-    Icons.cleaning_services,
-    Icons.electric_bolt,
-    Icons.toys,
-    Icons.kitchen,
-    Icons.local_laundry_service,
-    Icons.security,
-    Icons.motorcycle,
-    Icons.local_parking_outlined,
-    Icons.shield,
-    Icons.bed,
-    Icons.iron,
-    Icons.tv,
-    Icons.wifi,
-    Icons.credit_card,
-    Icons.shower,
-    Icons.water,
-    Icons.wash,
-    Icons.person,
-    Icons.clean_hands,
+  final List<Map<String, dynamic>> icons = [
+    {"icon": Icons.lightbulb_outline, "name": "lightbulb_outline"},
+    {"icon": Icons.flash_on, "name": "flash_on"},
+    {"icon": Icons.water_drop, "name": "water_drop"},
+    {"icon": Icons.elevator, "name": "elevator"},
+    {"icon": Icons.local_parking, "name": "local_parking"},
+    {"icon": Icons.ac_unit, "name": "ac_unit"},
+    {"icon": Icons.directions_bike, "name": "directions_bike"},
+    {"icon": Icons.cabin, "name": "cabin"},
+    {"icon": Icons.directions_car, "name": "directions_car"},
+    {"icon": Icons.cleaning_services, "name": "cleaning_services"},
+    {"icon": Icons.electric_bolt, "name": "electric_bolt"},
+    {"icon": Icons.toys, "name": "toys"},
+    {"icon": Icons.kitchen, "name": "kitchen"},
+    {"icon": Icons.local_laundry_service, "name": "local_laundry_service"},
+    {"icon": Icons.security, "name": "security"},
+    {"icon": Icons.motorcycle, "name": "motorcycle"},
+    {"icon": Icons.local_parking_outlined, "name": "local_parking_outlined"},
+    {"icon": Icons.shield, "name": "shield"},
+    {"icon": Icons.bed, "name": "bed"},
+    {"icon": Icons.iron, "name": "iron"},
+    {"icon": Icons.tv, "name": "tv"},
+    {"icon": Icons.wifi, "name": "wifi"},
+    {"icon": Icons.credit_card, "name": "credit_card"},
+    {"icon": Icons.shower, "name": "shower"},
+    {"icon": Icons.water, "name": "water"},
+    {"icon": Icons.wash, "name": "wash"},
+    {"icon": Icons.person, "name": "person"},
+    {"icon": Icons.clean_hands, "name": "clean_hands"},
   ];
 
   AddImageService({super.key});
@@ -79,18 +79,23 @@ class AddImageService extends StatelessWidget {
                   crossAxisSpacing: 12,
                 ),
                 itemBuilder: (context, index) {
+                  final iconData = icons[index]["icon"] as IconData;
+                  final iconName = icons[index]["name"] as String;
+
                   return GestureDetector(
                     onTap: () {
-                      // Trả về icon được chọn
-                      print('Chọn icon: $index');
-                      Navigator.pop(context, icons[index]);
+                      Navigator.pop(context, {
+                        "icon": iconData,
+                        "name": iconName,
+                      });
                     },
+
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.black12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(icons[index], size: 28),
+                      child: Icon(iconData, size: 28),
                     ),
                   );
                 },

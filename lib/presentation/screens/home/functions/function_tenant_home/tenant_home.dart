@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:motelapp/data/models/lessee_model.dart';
+import 'package:motelapp/data/models/tanent_model.dart';
 import 'package:motelapp/data/services/service_locator.dart';
+import 'package:motelapp/logic/cubits/home/tanent_home/lessee_cubit.dart';
+import 'package:motelapp/logic/cubits/home/tanent_home/lessee_state.dart';
+import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/detail_tanent_in_room/detail_tanent_in_room.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_tenant_home/detail_tenant/detail_tenant.dart';
 import 'package:motelapp/router/app_router.dart';
 
@@ -24,6 +30,9 @@ class _TenantHomeState extends State<TenantHome>
   void initState() {
     super.initState();
     _tabController = TabController(length: myTabs.length, vsync: this);
+
+    //load cubit list tanent
+    context.read<LesseeCubit>().loadTanents();
   }
 
   @override
@@ -38,7 +47,13 @@ class _TenantHomeState extends State<TenantHome>
       children: [
         Scaffold(
           appBar: AppBar(
-            leading: const BackButton(color: Colors.black),
+            //icon ios arrow back
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
             title: const Text(
               'Người thuê',
               style: TextStyle(
@@ -88,9 +103,39 @@ class _TenantHomeState extends State<TenantHome>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    ListView(children: [_buildTenantCard()]),
+                    //tab1 đã có phòng
+                    BlocBuilder<LesseeCubit, LesseeState>(
+                      builder: (context, state) {
+                        if (state.status == LesseeStatus.loading) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (state.status == LesseeStatus.error) {
+                          print('Lỗi: ${state.errorMessage}');
+                          return Center(
+                            child: Text('Lỗi: ${state.errorMessage}'),
+                          );
+                        } else if (state.status == LesseeStatus.loaded &&
+                            state.listLessee != null &&
+                            state.listLessee!.isNotEmpty) {
+                          final lessees = state.listLessee!;
+                          return ListView.builder(
+                            itemCount: lessees.length,
+                            itemBuilder: (context, index) {
+                              return _buildTenantCard(lessees[index]);
+                            },
+                          );
+                        } else {
+                          return const Center(
+                            child: Text('Không có người thuê'),
+                          );
+                        }
+                      },
+                    ),
+                    //tab2 chưa có phòng
                     const Center(child: Text('Chưa có phòng')),
-                    const Center(child: Text('Đã thôi')),
+                    //tab3 đã thanh lý
+                    const Center(child: Text('Đã Thanh lý')),
                   ],
                 ),
               ),
@@ -125,7 +170,7 @@ class _TenantHomeState extends State<TenantHome>
   }
 }
 
-Widget _buildTenantCard() {
+Widget _buildTenantCard(LesseeModel lessee) {
   return Container(
     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -138,15 +183,27 @@ Widget _buildTenantCard() {
     ),
     child: ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: const CircleAvatar(
-        backgroundColor: Colors.grey,
+      leading: CircleAvatar(
+        backgroundColor: Colors.grey[300],
         child: Icon(Icons.person, color: Colors.white),
       ),
-      title: const Text('huy', style: TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: const Text('số 1 - vi'),
-      trailing: const Text('404640464', style: TextStyle(color: Colors.green)),
+      title: Text(
+        lessee.tenNguoiDung,
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
+      subtitle: Text(
+        '${lessee.tenPhong} - ${lessee.tenToaNha}',
+        style: TextStyle(fontSize: 12),
+      ),
+      trailing: Text(
+        lessee.soDienThoai.toString(),
+        style: TextStyle(color: Colors.green),
+      ),
       onTap: () {
-        getIt<AppRouter>().push(const DetailTenant());
+        print('lessee ID: ${lessee.idNguoiDung}');
+        getIt<AppRouter>().push(
+          DetailTanentInRoom(idNguoiDung: lessee.idNguoiDung),
+        );
       },
     ),
   );

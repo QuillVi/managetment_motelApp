@@ -6,7 +6,6 @@ enum ListBuildingStatus { initial, loading, loaded, error }
 class ListBuildingState extends Equatable {
   final ListBuildingStatus status;
   final List<BuildingModel>? data;
-
   final String? error;
 
   const ListBuildingState({
