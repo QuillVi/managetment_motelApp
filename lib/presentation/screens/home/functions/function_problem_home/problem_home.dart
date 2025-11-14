@@ -5,7 +5,10 @@ import 'package:motelapp/data/models/problem_model.dart';
 import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/home/problem_home/list_problem_cubit.dart';
 import 'package:motelapp/logic/cubits/home/problem_home/list_problem_state.dart';
+import 'package:motelapp/presentation/screens/buttonNavicationBar/buttonNavicationBar.dart';
+import 'package:motelapp/presentation/screens/home/functions/function_problem_home/create_problem/create_problem.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_problem_home/detail_problem/detail_problem.dart';
+
 import 'package:motelapp/router/app_router.dart';
 
 class ProblemHome extends StatefulWidget {
@@ -51,7 +54,12 @@ class _ProblemHomeState extends State<ProblemHome>
       children: [
         Scaffold(
           appBar: AppBar(
-            leading: const BackButton(color: Colors.black),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+              onPressed: () {
+                getIt<AppRouter>().push(Buttonnavicationbar());
+              },
+            ),
             title: const Text(
               'Sự cố',
               style: TextStyle(
@@ -137,7 +145,9 @@ class _ProblemHomeState extends State<ProblemHome>
           bottom: 84,
           right: 24,
           child: GestureDetector(
-            onTap: () {},
+            onTap: () {
+              getIt<AppRouter>().push(CreateProblem());
+            },
             child: Container(
               width: 60,
               height: 60,
@@ -165,7 +175,9 @@ class _ProblemHomeState extends State<ProblemHome>
   ) {
     return GestureDetector(
       onTap: () {
-        getIt<AppRouter>().push(const DetailProblem());
+        getIt<AppRouter>().push(
+          DetailProblem(problemId: problemsRequesting.id_suco),
+        );
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -284,102 +296,120 @@ class _ProblemHomeState extends State<ProblemHome>
   }
 
   Widget _buildIssueCardproblemsDoned(ProblemModelDoned problemsDoned) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /// Tiêu đề và độ ưu tiên
-            Row(
-              children: [
-                const Icon(Icons.warning_amber, color: Colors.grey),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    problemsDoned.ten_suco,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: getMucDoColor(problemsDoned.muc_do).withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    problemsDoned.muc_do ?? 'Không xác định',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            /// Phòng
-            Row(
-              children: [
-                Icon(Icons.home_outlined, size: 18, color: Colors.grey),
-                SizedBox(width: 6),
-                Text(
-                  '${problemsDoned.ten_phong} - ${problemsDoned.ten_toanha}',
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-
-            /// Địa chỉ
-            Row(
-              children: [
-                Icon(Icons.location_on_outlined, size: 18, color: Colors.grey),
-                SizedBox(width: 6),
-                Text(problemsDoned.dia_chi ?? 'Chưa có địa chỉ'),
-              ],
-            ),
-            const SizedBox(height: 6),
-
-            /// Người báo
-            Row(
-              children: [
-                Icon(Icons.person, size: 18, color: Colors.grey),
-                SizedBox(width: 6),
-                Text(problemsDoned.ten_nguoithue ?? 'Chưa có người thuê'),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            /// Ngày
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Text(
-                problemsDoned.updatedAt != null
-                    ? DateFormat('dd/MM/yyyy').format(problemsDoned.updatedAt!)
-                    : '',
-                style: TextStyle(
-                  color: Colors.green[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+    return GestureDetector(
+      onTap: () {
+        getIt<AppRouter>().push(
+          DetailProblem(problemId: problemsDoned.id_suco),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 14,
+              offset: Offset(0, 6),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// Tiêu đề và độ ưu tiên
+              Row(
+                children: [
+                  const Icon(Icons.warning_amber, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      problemsDoned.ten_suco,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: getMucDoColor(
+                        problemsDoned.muc_do,
+                      ).withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      problemsDoned.muc_do ?? 'Không xác định',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              /// Phòng
+              Row(
+                children: [
+                  Icon(Icons.home_outlined, size: 18, color: Colors.grey),
+                  SizedBox(width: 6),
+                  Text(
+                    '${problemsDoned.ten_phong} - ${problemsDoned.ten_toanha}',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+
+              /// Địa chỉ
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(width: 6),
+                  Text(problemsDoned.dia_chi ?? 'Chưa có địa chỉ'),
+                ],
+              ),
+              const SizedBox(height: 6),
+
+              /// Người báo
+              Row(
+                children: [
+                  Icon(Icons.person, size: 18, color: Colors.grey),
+                  SizedBox(width: 6),
+                  Text(problemsDoned.ten_nguoithue ?? 'Chưa có người thuê'),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              /// Ngày
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Text(
+                  problemsDoned.updatedAt != null
+                      ? DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(problemsDoned.updatedAt!)
+                      : '',
+                  style: TextStyle(
+                    color: Colors.green[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:motelapp/data/models/room_model.dart';
 import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/building/detail_building_cubit.dart';
 import 'package:motelapp/logic/cubits/building/detail_building_state.dart';
 import 'package:motelapp/logic/cubits/building/room_in_building/room_in_building_cubit.dart';
 import 'package:motelapp/logic/cubits/building/room_in_building/room_in_building_state.dart';
+import 'package:motelapp/presentation/screens/building/building_screen.dart';
+import 'package:motelapp/presentation/screens/building/list_room_in_building/create_room.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/detail_room_in_building.dart';
+import 'package:motelapp/presentation/screens/buttonNavicationBar/buttonNavicationBar.dart';
 import 'package:motelapp/router/app_router.dart';
 
 class ListRoomInBuilding extends StatefulWidget {
@@ -21,7 +25,232 @@ class ListRoomInBuilding extends StatefulWidget {
   State<ListRoomInBuilding> createState() => _ListRoomInBuildingState();
 }
 
+enum RoomFilterStatus { all, rented, available }
+
 class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
+  final TextEditingController _searchController = TextEditingController();
+  // Định nghĩa các trạng thái lọc
+
+  String _searchQuery = '';
+  List<RoomModel> _allRooms = []; // List<RoomModel>
+
+  List<RoomModel> _filteredRooms = [];
+
+  bool _isDataInitialized = false;
+
+  // Biến lưu trữ giá trị lọc hiện tại
+  RoomFilterStatus _currentStatusFilter = RoomFilterStatus.all;
+  double _currentMinPrice = 0;
+  double _currentMaxPrice = 100000000; // Sẽ được cập nhật từ API
+  double _maxPriceFromData = 100000000; // Giá tối đa thực tế từ API
+
+  /// HÀM LỌC TỔNG HỢP (THAY THẾ _filterRoomsByName)
+  void _applyFilters() {
+    List<RoomModel> temp = _allRooms; // Luôn bắt đầu từ danh sách gốc
+
+    // 1. Lọc theo tên (từ ô tìm kiếm)
+    // Đảm bảo _searchQuery được cập nhật trong onChanged
+    if (_searchQuery.isNotEmpty) {
+      temp =
+          temp.where((room) {
+            return room.tenPhong.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            );
+          }).toList();
+    }
+
+    // 2. Lọc theo trạng thái (từ dialog)
+    switch (_currentStatusFilter) {
+      case RoomFilterStatus.rented: // Đã thuê
+        // Dựa trên dữ liệu API: so_nguoi_thue > 0
+        temp = temp.where((room) => room.soNguoiThue > 0).toList();
+        break;
+      case RoomFilterStatus.available: // Trống
+        // Dựa trên dữ liệu API: so_nguoi_thue == 0
+        temp = temp.where((room) => room.soNguoiThue == 0).toList();
+        break;
+      case RoomFilterStatus.all: // Tất cả
+      default:
+        // Không lọc theo trạng thái
+        break;
+    }
+
+    // 3. Lọc theo giá (từ dialog)
+    temp =
+        temp.where((room) {
+          // Đảm bảo giaPhong là kiểu double/int
+          return room.giaPhong >= _currentMinPrice &&
+              room.giaPhong <= _currentMaxPrice;
+        }).toList();
+
+    // Cập nhật UI
+    setState(() {
+      _filteredRooms = temp;
+    });
+  }
+
+  /// Hiển thị Bảng lọc (Modal Bottom Sheet)
+  void _showFilterDialog() {
+    // Biến tạm thời để lưu trữ lựa chọn BÊN TRONG dialog
+    // Chúng chỉ cập nhật state chính khi người dùng nhấn "Áp dụng"
+    RoomFilterStatus tempStatus = _currentStatusFilter;
+    double tempMinPrice = _currentMinPrice;
+    double tempMaxPrice = _currentMaxPrice;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Cho phép dialog có thể cuộn và cao
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        // Dùng StatefulBuilder để UI bên trong dialog
+        // (như Radio, Slider) có thể tự cập nhật
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setDialogState) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // Chỉ chiếm chiều cao cần thiết
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // --- Tiêu đề Dialog ---
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Bộ lọc",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // --- 1. Lọc theo Trạng thái ---
+                  const Text(
+                    "Trạng thái phòng",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  // Các lựa chọn cho trạng thái
+                  RadioListTile<RoomFilterStatus>(
+                    title: const Text("Tất cả"),
+                    value: RoomFilterStatus.all,
+                    groupValue: tempStatus,
+                    activeColor: Colors.green, // Màu khi được chọn
+                    onChanged: (value) {
+                      setDialogState(() {
+                        tempStatus = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<RoomFilterStatus>(
+                    title: const Text("Đã cho thuê"),
+                    value: RoomFilterStatus.rented,
+                    groupValue: tempStatus,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        tempStatus = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<RoomFilterStatus>(
+                    title: const Text("Phòng trống"),
+                    value: RoomFilterStatus.available,
+                    groupValue: tempStatus,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        tempStatus = value!;
+                      });
+                    },
+                  ),
+                  const Divider(height: 24),
+
+                  // --- 2. Lọc theo Giá ---
+                  Text(
+                    "Khoảng giá (đơn vị: đ)",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Hiển thị giá trị đang chọn
+                  Text(
+                    "${tempMinPrice.toStringAsFixed(0)}đ - ${tempMaxPrice.toStringAsFixed(0)}đ",
+                    style: const TextStyle(color: Colors.black54, fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                  // Thanh trượt chọn khoảng giá
+                  RangeSlider(
+                    values: RangeValues(tempMinPrice, tempMaxPrice),
+                    min: 0, // Giá thấp nhất là 0
+                    max: _maxPriceFromData, // Giá cao nhất lấy từ API
+                    divisions: 50, // Chia thanh trượt ra 50 nấc
+                    activeColor: Colors.green,
+                    labels: RangeLabels(
+                      tempMinPrice.toStringAsFixed(0),
+                      tempMaxPrice.toStringAsFixed(0),
+                    ),
+                    onChanged: (RangeValues values) {
+                      setDialogState(() {
+                        tempMinPrice = values.start;
+                        tempMaxPrice = values.end;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- 3. Nút Áp dụng ---
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green, // Màu nút
+                      foregroundColor: Colors.white, // Màu chữ
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "Áp dụng",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      // Cập nhật state chính của Widget
+                      setState(() {
+                        _currentStatusFilter = tempStatus;
+                        _currentMinPrice = tempMinPrice;
+                        _currentMaxPrice = tempMaxPrice;
+                      });
+
+                      // --- QUAN TRỌNG ---
+                      // Gọi hàm lọc tổng để cập nhật UI
+                      _applyFilters();
+                      // -----------------
+
+                      Navigator.pop(context); // Đóng dialog// Đóng dialog
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -32,51 +261,103 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _searchController.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-          ),
-          centerTitle: true,
-          title: Column(
-            children: [
-              Text(
-                widget.buildingName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+      child: Stack(
+        children: [
+          Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              elevation: 0,
+              shadowColor: Colors.transparent,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                onPressed: () {
+                  getIt<AppRouter>().push(const Buttonnavicationbar(index: 1));
+                },
               ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.filter_alt_outlined, color: Colors.orange),
-              onPressed: () {},
+              centerTitle: true,
+              title: Column(
+                children: [
+                  Text(
+                    widget.buildingName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.filter_alt_outlined,
+                    color: Colors.orange,
+                  ),
+                  onPressed: () {
+                    _showFilterDialog();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_square, color: Colors.orange),
+                  onPressed: () {},
+                ),
+              ],
+              bottom: TabBar(
+                labelColor: Colors.green,
+                unselectedLabelColor: Colors.black45,
+                indicatorColor: Colors.green,
+                indicatorWeight: 2,
+                dividerHeight: 0,
+                tabs: const [
+                  Tab(text: 'Danh sách phòng'),
+                  Tab(text: 'Chi tiết'),
+                ],
+              ),
             ),
-            IconButton(
-              icon: const Icon(Icons.edit_square, color: Colors.orange),
-              onPressed: () {},
-            ),
-          ],
-          bottom: TabBar(
-            labelColor: Colors.green,
-            unselectedLabelColor: Colors.black45,
-            indicatorColor: Colors.green,
-            indicatorWeight: 2,
-            dividerHeight: 0,
-            tabs: const [Tab(text: 'Danh sách phòng'), Tab(text: 'Chi tiết')],
-          ),
-        ),
 
-        body: TabBarView(
-          children: [_buildRoomCard(), _buildDetailBuildingCard()],
-        ),
+            body: TabBarView(
+              children: [_buildRoomCard(), _buildDetailBuildingCard()],
+            ),
+          ),
+
+          Positioned(
+            bottom: 60,
+            right: 24,
+            child: GestureDetector(
+              onTap: () {
+                getIt<AppRouter>().push(
+                  CreateRoom(
+                    buildingId: widget.buildingId,
+                    buildingName: widget.buildingName,
+                  ),
+                );
+              },
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: const BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 8,
+                      offset: Offset(2, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 30),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -90,10 +371,10 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
     required int warnings,
     String? statusDeposit,
     String? statusRented,
-    VoidCallback? onTap, // 👈 thêm vào
+    VoidCallback? onTap, //  thêm vào
   }) {
     return GestureDetector(
-      onTap: onTap, // 👈 gọi callback thay vì fix cứng Navigator
+      onTap: onTap, // gọi callback thay vì fix cứng Navigator
       child: Container(
         margin: const EdgeInsets.all(4.0),
         decoration: BoxDecoration(
@@ -187,7 +468,14 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
         }
 
         if (state.status == RoomInBuildingStatus.loaded && state.data != null) {
-          final rooms = state.data!; // List<RoomModel>
+          if (!_isDataInitialized) {
+            _allRooms = state.data!;
+            _filteredRooms =
+                _allRooms; // Ban đầu, danh sách lọc = danh sách gốc
+            _isDataInitialized = true;
+          }
+
+          //final rooms = state.data!; // List<RoomModel>
 
           return Column(
             children: [
@@ -195,6 +483,7 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.search),
                     hintText: 'Tìm kiếm theo tên phòng...',
@@ -204,9 +493,26 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
+                    suffixIcon:
+                        _searchController.text.isNotEmpty
+                            ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                                _applyFilters(); // Gọi hàm lọc với query rỗng
+                              },
+                            )
+                            : null,
                   ),
+
                   onChanged: (value) {
-                    // TODO: nếu bạn muốn lọc dữ liệu theo value thì có thể implement thêm Cubit filter
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                    _applyFilters();
                   },
                 ),
               ),
@@ -220,9 +526,9 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
                     mainAxisSpacing: 10.0,
                     childAspectRatio: 0.7,
                   ),
-                  itemCount: rooms.length,
+                  itemCount: _filteredRooms.length,
                   itemBuilder: (context, index) {
-                    final room = rooms[index];
+                    final room = _filteredRooms[index];
                     return _buildSingleRoomCard(
                       roomNumber: room.tenPhong,
                       price: "${room.giaPhong.toStringAsFixed(0)} đ",
@@ -704,10 +1010,19 @@ class ServiceCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Image.asset(
-                    "lib/assets/icons/$iconPath", // icon lấy từ thư mục lib/assets/icons
+                    "lib/assets/icons/$iconPath",
                     width: 20,
                     height: 20,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Hiển thị icon mặc định khi không tìm thấy file
+                      return Image.asset(
+                        "lib/assets/icons/default.png",
+                        width: 20,
+                        height: 20,
+                        fit: BoxFit.contain,
+                      );
+                    },
                   ),
                   const SizedBox(height: 8),
                   Text(

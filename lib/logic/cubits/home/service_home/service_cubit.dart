@@ -24,3 +24,27 @@ class ServiceCubit extends Cubit<ServiceState> {
     }
   }
 }
+
+class ClosureServiceCubit extends Cubit<ServiceState> {
+  final ServiceHomeRepository serviceHomeRepository;
+
+  ClosureServiceCubit({required this.serviceHomeRepository})
+    : super(const ServiceState());
+
+  Future<void> loadClosureServices() async {
+    emit(state.copyWith(status: ServiceStatus.loading));
+    try {
+      final dataClosureService =
+          await serviceHomeRepository.fetchClosureServices();
+      emit(
+        state.copyWith(
+          status: ServiceStatus.success,
+          dataClosureService: dataClosureService,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(status: ServiceStatus.failure, error: e.toString()));
+    }
+  }
+}

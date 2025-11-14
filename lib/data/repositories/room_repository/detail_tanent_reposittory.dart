@@ -5,8 +5,8 @@ import 'package:motelapp/data/services/dio_client.dart';
 class DetailTanentReposittory {
   final Dio dio = DioClient().dio;
 
-  Future<UserModel> fetchDetailTanent(int idNguoiDung) async {
-    final response = await dio.get('/user/getUserById/$idNguoiDung');
+  Future<UserModel> fetchDetailTanent(int idNguoiThue) async {
+    final response = await dio.get('/user/getUserById/$idNguoiThue');
 
     if (response.statusCode == 200 && response.data['success'] == true) {
       final data = response.data['data'];

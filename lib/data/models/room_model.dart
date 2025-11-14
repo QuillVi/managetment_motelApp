@@ -114,3 +114,102 @@ class RoomModel {
 
   Map<String, dynamic> toJson() => toMap();
 }
+
+class ListRoomProblemModel {
+  final int id_phong;
+  final int id_toanha;
+  final String ten_phong;
+  final String ten_toanha;
+  final String dia_chi;
+  final String trang_thai_coc;
+
+  ListRoomProblemModel({
+    required this.id_phong,
+    required this.id_toanha,
+    required this.ten_phong,
+    required this.ten_toanha,
+    required this.dia_chi,
+    required this.trang_thai_coc,
+  });
+
+  /// Parse từ Map (API trả về)
+  factory ListRoomProblemModel.fromMap(Map<String, dynamic> map) {
+    return ListRoomProblemModel(
+      id_phong: map['id_phong'],
+      id_toanha: map['id_toanha'],
+      ten_phong: map['ten_phong'],
+      ten_toanha: map['ten_toanha'],
+      dia_chi: map['dia_chi'],
+      trang_thai_coc: map['trang_thai_coc'],
+    );
+  }
+}
+
+class NameRoomBuildingModel {
+  final int id_phong;
+  final int id_toanha;
+  final String ten_phong;
+  final String ten_toanha;
+
+  NameRoomBuildingModel({
+    required this.id_phong,
+    required this.id_toanha,
+    required this.ten_phong,
+    required this.ten_toanha,
+  });
+
+  /// Parse từ Map (API trả về)
+  factory NameRoomBuildingModel.fromMap(Map<String, dynamic> map) {
+    return NameRoomBuildingModel(
+      id_phong: map['id_phong'],
+      id_toanha: map['id_toanha'],
+      ten_phong: map['ten_phong'],
+      ten_toanha: map['ten_toanha'],
+    );
+  }
+}
+
+class SelectRoomManagetModel {
+  final int id_phong;
+  final int id_toanha;
+  final int id_hopdong;
+  final String ten_phong;
+  final double gia_phong;
+  final String ten_toanha;
+  final String dia_chi;
+  final String trang_thai_coc;
+  final int id_nguoidung;
+  final List<ServiceModel> ds_dichvu; // List<ServiceModel>
+
+  SelectRoomManagetModel({
+    required this.id_phong,
+    required this.id_toanha,
+    required this.id_hopdong,
+    required this.ten_phong,
+    required this.gia_phong,
+    required this.ten_toanha,
+    required this.dia_chi,
+    required this.trang_thai_coc,
+    required this.id_nguoidung,
+    required this.ds_dichvu,
+  });
+
+  /// Parse từ Map (API trả về)
+  factory SelectRoomManagetModel.fromMap(Map<String, dynamic> map) {
+    return SelectRoomManagetModel(
+      id_phong: map['id_phong'],
+      id_toanha: map['id_toanha'],
+      id_hopdong: map['id_hopdong'],
+      ten_phong: map['ten_phong'],
+      gia_phong: double.tryParse(map['gia_phong']?.toString() ?? '0.0') ?? 0.0,
+      ten_toanha: map['ten_toanha'],
+      dia_chi: map['dia_chi'],
+      trang_thai_coc: map['trang_thai_coc'],
+      id_nguoidung: map['id_nguoidung'],
+      ds_dichvu:
+          (map['ds_dichvu'] as List<dynamic>)
+              .map((item) => ServiceModel.fromMap(item as Map<String, dynamic>))
+              .toList(),
+    );
+  }
+}

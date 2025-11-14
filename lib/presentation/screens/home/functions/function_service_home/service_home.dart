@@ -4,7 +4,9 @@ import 'package:motelapp/data/models/service_model.dart'; // ✅ import model th
 import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/home/service_home/service_cubit.dart';
 import 'package:motelapp/logic/cubits/home/service_home/service_state.dart';
+import 'package:motelapp/presentation/screens/buttonNavicationBar/buttonNavicationBar.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_service_home/add_service/add_service.dart';
+
 import 'package:motelapp/router/app_router.dart';
 
 class ServiceHome extends StatefulWidget {
@@ -31,7 +33,7 @@ class _ServiceHomeState extends State<ServiceHome> {
           appBar: AppBar(
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-              onPressed: () => getIt<AppRouter>().pop(context),
+              onPressed: () => getIt<AppRouter>().push(Buttonnavicationbar()),
             ),
             title: const Text(
               'Dịch vụ',

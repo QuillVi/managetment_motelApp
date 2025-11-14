@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:motelapp/data/models/building_model.dart';
 import 'package:motelapp/data/services/service_locator.dart';
+import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
 import 'package:motelapp/logic/cubits/building/list_building_cubit.dart';
 import 'package:motelapp/logic/cubits/building/list_building_state.dart';
+import 'package:motelapp/presentation/screens/building/create_building.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/list_room_in_building.dart';
 import 'package:motelapp/router/app_router.dart';
 
@@ -18,8 +20,16 @@ class _BuildingScreenState extends State<BuildingScreen> {
   @override
   void initState() {
     super.initState();
-    // Gọi API khi mở màn hình
-    context.read<ListBuildingCubit>().loadBuildings();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final token = await context.read<AuthCubit>().authRepository.getToken();
+      if (token != null) {
+        // Gọi API khi mở màn hình
+        context.read<ListBuildingCubit>().loadBuildings();
+      } else {
+        print("Chưa có token, hãy login trước.");
+      }
+    });
   }
 
   @override
@@ -33,6 +43,7 @@ class _BuildingScreenState extends State<BuildingScreen> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             centerTitle: true,
+            automaticallyImplyLeading: false,
             actions: [
               IconButton(
                 icon: const Icon(
@@ -77,7 +88,9 @@ class _BuildingScreenState extends State<BuildingScreen> {
           bottom: 60,
           right: 24,
           child: GestureDetector(
-            onTap: () {},
+            onTap: () {
+              getIt<AppRouter>().push(const CreateBuilding());
+            },
             child: Container(
               width: 60,
               height: 60,
@@ -138,7 +151,7 @@ class _BuildingScreenState extends State<BuildingScreen> {
             Text(
               building.diachi_toanha,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black87),
+              style: const TextStyle(color: Colors.black87, fontSize: 11),
             ),
           ],
         ),

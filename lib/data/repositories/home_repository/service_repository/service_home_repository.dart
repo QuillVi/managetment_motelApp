@@ -15,4 +15,15 @@ class ServiceHomeRepository {
       throw Exception('Không thể lấy danh sách dịch vụ');
     }
   }
+
+  Future<List<ServiceClosureModel>> fetchClosureServices() async {
+    final response = await dio.get('/service/getListServicesClosure');
+
+    if (response.statusCode == 200 && response.data['success'] == true) {
+      List<dynamic> data = response.data['data'];
+      return data.map((item) => ServiceClosureModel.fromMap(item)).toList();
+    } else {
+      throw Exception('Không thể lấy danh sách chốt dịch vụ');
+    }
+  }
 }

@@ -4,8 +4,8 @@ import 'package:motelapp/logic/cubits/building/room_in_building/detail_tanent_cu
 import 'package:motelapp/logic/cubits/building/room_in_building/detail_tanent_state.dart';
 
 class DetailTanentInRoom extends StatefulWidget {
-  final int idNguoiDung;
-  const DetailTanentInRoom({super.key, required this.idNguoiDung});
+  final int idNguoiThue;
+  const DetailTanentInRoom({super.key, required this.idNguoiThue});
 
   @override
   State<DetailTanentInRoom> createState() => _DetailTanentInRoomState();
@@ -16,7 +16,7 @@ class _DetailTanentInRoomState extends State<DetailTanentInRoom> {
   void initState() {
     super.initState();
 
-    context.read<DetailTanentCubit>().loadTanentDetail(widget.idNguoiDung);
+    context.read<DetailTanentCubit>().loadTanentDetail(widget.idNguoiThue);
   }
 
   @override
@@ -145,10 +145,10 @@ class _DetailTanentInRoomState extends State<DetailTanentInRoom> {
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            ThongTinRow(
-                              label: "Email",
-                              value: detailTanent.email ?? "chưa có email",
-                            ),
+                            // ThongTinRow(
+                            //   label: "Email",
+                            //   value: detailTanent.email ?? "chưa có email",
+                            // ),
                             ThongTinRow(
                               label: "Ngày sinh",
                               value:

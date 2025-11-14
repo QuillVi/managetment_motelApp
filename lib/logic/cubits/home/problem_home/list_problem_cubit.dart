@@ -57,3 +57,31 @@ class ListProblemDonedCubit extends Cubit<ListProblemState> {
     }
   }
 }
+
+class ListProblemUserCubit extends Cubit<ListProblemState> {
+  final ListProblemByUserIdRepository listProblemByUserIdRepository;
+  ListProblemUserCubit({required this.listProblemByUserIdRepository})
+    : super(const ListProblemState());
+
+  Future<void> loadListProblemUser() async {
+    emit(state.copyWith(status: ListProblemStatus.loading));
+    try {
+      final problemsUser =
+          await listProblemByUserIdRepository.fetchListProblemUser();
+      emit(
+        state.copyWith(
+          status: ListProblemStatus.loaded,
+          problemsUser: problemsUser,
+          errorMessage: null,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          status: ListProblemStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
+    }
+  }
+}

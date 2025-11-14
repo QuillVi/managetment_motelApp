@@ -4,6 +4,7 @@ import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
 import 'package:motelapp/logic/cubits/home/statistical_cubit.dart';
 import 'package:motelapp/logic/cubits/home/statistical_state.dart';
+import 'package:motelapp/presentation/screens/auth/login_screen.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_bill_home/bill_home.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_contract_home/contract_home.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_eletricwater_home/electricwater_home.dart';
@@ -84,10 +85,68 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // ... các import và phần code trên giữ nguyên ...
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Giả sử AuthCubit cung cấp AuthRepository
+      final authRepository = context.read<AuthCubit>().authRepository;
+
+      final token = await authRepository.getToken();
+
+      if (token != null) {
+        // Có token, tiếp tục tải dữ liệu
+        if (mounted) {
+          context.read<StatisticalCubit>().loadStatistics();
+        }
+      } else {
+        // KHÔNG CÓ TOKEN -> Hiển thị Dialog thông báo hết phiên
+        print("Chưa có token, hãy login trước. Hiển thị thông báo hết phiên.");
+
+        // Đảm bảo context còn hợp lệ (mounted) trước khi sử dụng showDialog
+        if (mounted) {
+          showDialog(
+            context: context,
+            // Ngăn người dùng đóng dialog bằng cách nhấn ra ngoài
+            barrierDismissible: false,
+            builder: (BuildContext dialogContext) {
+              return AlertDialog(
+                title: const Text('Hết phiên đăng nhập'),
+                content: const Text(
+                  'Phiên đăng nhập của bạn đã hết hạn hoặc bạn chưa đăng nhập. Vui lòng đăng nhập lại.',
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: const Text('Đăng nhập lại'),
+                    onPressed: () {
+                      // 1. Đóng dialog trước
+                      Navigator.of(dialogContext).pop();
+
+                      // 2. Chuyển hướng người dùng sang màn hình đăng nhập
+                      getIt<AppRouter>().push(LoginScreen());
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthCubit>().state.user;
+
     final ten = user?.ten.isNotEmpty == true ? user!.ten : 'Người dùng';
+    print(
+      "thong tin nguoi dung: id: ${user?.id_nguoidung},ten: ${user?.ten}, vaiTro: ${user?.vaitro},Token: ${user?.token}",
+    );
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(

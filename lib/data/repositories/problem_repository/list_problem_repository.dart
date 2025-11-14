@@ -33,3 +33,19 @@ class ListProblemDoneRepository {
     }
   }
 }
+
+class ListProblemByUserIdRepository {
+  final Dio dio = DioClient().dio;
+
+  Future<List<ProblemUserModel>> fetchListProblemUser() async {
+    final response = await dio.get('/problem/getProblemByUserId');
+    print('Response data: ${response.data}');
+
+    if (response.statusCode == 200 && response.data['success'] == true) {
+      final List<dynamic> data = response.data['data'];
+      return data.map((e) => ProblemUserModel.fromMap(e)).toList();
+    } else {
+      throw Exception('Không thể lấy danh sách sự cố hoàn thành');
+    }
+  }
+}

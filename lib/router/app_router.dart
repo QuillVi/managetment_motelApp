@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:motelapp/presentation/screens/auth/login_screen.dart';
 
 class AppRouter {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -28,5 +29,12 @@ class AppRouter {
 
   Future<T?> pushNamed<T>(String routeName, {Object? arguments}) {
     return _navigator.pushNamed<T>(routeName, arguments: arguments);
+  }
+
+  Future<void> replaceAllToLogin() {
+    return _navigator.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false, // Điều kiện này đảm bảo xóa tất cả các route trước
+    );
   }
 }

@@ -79,6 +79,19 @@ class AuthRepository {
     }
   }
 
+  /// ✅ Cập nhật FCM Token
+  Future<void> updateFcmToken(String fcmToken) async {
+    try {
+      // API endpoint này chúng ta sẽ tạo ở server Node.js
+      await _dio.post('/user/update-fcm-token', data: {'fcmToken': fcmToken});
+      print('FCM token updated successfully on server.');
+    } on DioException catch (e) {
+      // In lỗi nhưng không ném ra Exception,
+      // vì đây không phải là lỗi nghiêm trọng cản trở app
+      print('Failed to update FCM token: ${e.response?.data['message']}');
+    }
+  }
+
   /// ✅ Lưu thông tin người dùng
   Future<void> saveUserData({
     required int id,

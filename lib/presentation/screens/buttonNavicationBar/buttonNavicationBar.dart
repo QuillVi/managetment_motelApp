@@ -6,7 +6,8 @@ import 'package:motelapp/presentation/screens/manage/manage_screen.dart';
 import 'package:motelapp/presentation/screens/message/message_screen.dart';
 
 class Buttonnavicationbar extends StatefulWidget {
-  const Buttonnavicationbar({super.key});
+  final int index;
+  const Buttonnavicationbar({super.key, this.index = 0});
 
   static _ButtonnavicationbarState? of(BuildContext context) =>
       context.findAncestorStateOfType<_ButtonnavicationbarState>();
@@ -23,6 +24,9 @@ class _ButtonnavicationbarState extends State<Buttonnavicationbar> {
   @override
   void initState() {
     super.initState();
+
+    _selectedIndex = widget.index;
+
     _widgetOptions = <Widget>[
       HomeScreen(),
       BuildingScreen(),

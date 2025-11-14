@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:motelapp/data/models/contract_model.dart';
+import 'package:motelapp/data/services/service_locator.dart';
+import 'package:motelapp/logic/cubits/home/contract_home/contract_cubit.dart';
+import 'package:motelapp/logic/cubits/home/contract_home/contract_state.dart';
+import 'package:motelapp/presentation/screens/buttonNavicationBar/buttonNavicationBar.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_contract_home/detail_contract/detail_contract.dart';
+import 'package:motelapp/router/app_router.dart';
 
 class ContractHome extends StatefulWidget {
   const ContractHome({super.key});
@@ -10,6 +17,14 @@ class ContractHome extends StatefulWidget {
 
 class _ContractHomeState extends State<ContractHome> {
   @override
+  void initState() {
+    super.initState();
+
+    // //load cubit list contract is active
+    context.read<ListContractCubit>().LoadListContract();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
@@ -17,7 +32,11 @@ class _ContractHomeState extends State<ContractHome> {
           length: 3,
           child: Scaffold(
             appBar: AppBar(
-              leading: const BackButton(color: Colors.black),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                onPressed:
+                    () => getIt<AppRouter>().push(const Buttonnavicationbar()),
+              ),
               centerTitle: true,
               title: const Text(
                 'Hợp đồng',
@@ -40,29 +59,81 @@ class _ContractHomeState extends State<ContractHome> {
                 dividerHeight: 0,
                 tabs: [
                   Tab(text: 'Đang hoạt động'),
-                  Tab(text: 'Quá hạn'),
+                  Tab(text: 'Hết hạn'),
                   Tab(text: 'Đã thanh lý'),
                 ],
               ),
             ),
 
-            body: TabBarView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: ListView.builder(
-                    itemCount: 2,
-                    itemBuilder: (context, index) {
-                      return buildContractCard(context);
-                    },
-                  ),
-                ),
-                const Center(child: Text("Chưa có hợp đồng quá hạn")),
-                const Center(child: Text("Chưa có hợp đồng thanh lý")),
-              ],
+            body: BlocBuilder<ListContractCubit, ListContractState>(
+              builder: (context, state) {
+                // 1. Trạng thái Loading
+                if (state.status == ListContractIsActiveStatus.loading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                // 2. Trạng thái Error
+                if (state.status == ListContractIsActiveStatus.error) {
+                  print('Lỗi: ${state.errorMessage}');
+                  return Center(child: Text('Lỗi: ${state.errorMessage}'));
+                }
+
+                // 3. Trạng thái Loaded
+                if (state.status == ListContractIsActiveStatus.loaded &&
+                    state.listContractModel != null) {
+                  // Lấy danh sách tổng
+                  final allContracts = state.listContractModel!;
+
+                  // Nếu danh sách tổng rỗng
+                  if (allContracts.isEmpty) {
+                    return const Center(
+                      child: Text('Không có dữ liệu hợp đồng'),
+                    );
+                  }
+
+                  // Lọc danh sách cho 3 tab
+                  final activeContracts =
+                      allContracts
+                          .where((c) => c.trang_thai == 'DangHoatDong')
+                          .toList();
+                  final expiredContracts =
+                      allContracts
+                          .where((c) => c.trang_thai == 'HetHan')
+                          .toList();
+                  final liquidatedContracts =
+                      allContracts
+                          .where((c) => c.trang_thai == 'DaThanhLy')
+                          .toList();
+
+                  // Hiển thị TabBarView với 3 danh sách đã lọc
+                  return TabBarView(
+                    children: [
+                      // Tab 1: Đang hoạt động
+                      _buildContractListView(
+                        contracts: activeContracts,
+                        emptyMessage: 'Không có hợp đồng đang hoạt động',
+                      ),
+                      // Tab 2: Hết hạn
+                      _buildContractListView(
+                        contracts: expiredContracts,
+                        emptyMessage: 'Không có hợp đồng hết hạn',
+                      ),
+                      // Tab 3: Đã thanh lý
+                      _buildContractListView(
+                        contracts: liquidatedContracts,
+                        emptyMessage: 'Không có hợp đồng đã thanh lý',
+                      ),
+                    ],
+                  );
+                }
+
+                // 4. Trạng thái Initial hoặc không có dữ liệu
+                return const Center(child: Text('Không có dữ liệu hợp đồng'));
+              },
             ),
           ),
         ),
+        // ... (Phần Positioned của bạn giữ nguyên) ...
         Positioned(
           bottom: 84,
           right: 24,
@@ -90,7 +161,28 @@ class _ContractHomeState extends State<ContractHome> {
     );
   }
 
-  Widget buildContractCard(BuildContext context) {
+  Widget _buildContractListView({
+    required List<ListContractModel> contracts,
+    required String emptyMessage,
+  }) {
+    if (contracts.isEmpty) {
+      return Center(child: Text(emptyMessage));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: ListView.builder(
+        itemCount: contracts.length,
+        itemBuilder: (context, index) {
+          final contractItem = contracts[index];
+          // SỬA: Đổi tên model ở đây cho khớp
+          return buildContractCard(context, contractItem);
+        },
+      ),
+    );
+  }
+
+  Widget buildContractCard(BuildContext context, ListContractModel contract) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -116,54 +208,59 @@ class _ContractHomeState extends State<ContractHome> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '#013351',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              // Dữ liệu ĐỘNG: id_hopdong
+              Text(
+                '#${contract.id_hopdong}', // Giả sử model có trường id_hopdong
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
-                children: const [
-                  Icon(Icons.home_outlined, size: 18, color: Colors.grey),
-                  SizedBox(width: 6),
-                  Text('số 1 - vi'),
+                children: [
+                  const Icon(Icons.home_outlined, size: 18, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  // Dữ liệu ĐỘNG: ten_phong và ten_toanha
+                  Text(
+                    '${contract.ten_phong} - ${contract.ten_toanha}',
+                  ), // Giả sử model có 2 trường này
                 ],
               ),
               const SizedBox(height: 6),
               Row(
-                children: const [
-                  Icon(
+                children: [
+                  const Icon(
                     Icons.calendar_today_outlined,
                     size: 18,
                     color: Colors.grey,
                   ),
-                  SizedBox(width: 6),
-                  Text('Từ 23-03-2025 đến [Chưa xác định thời hạn]'),
+                  const SizedBox(width: 6),
+                  // Dữ liệu ĐỘNG: ngay_batdau và thoi_han
+                  Text(
+                    'Từ ${contract.ngay_batdau} [Thời hạn: ${contract.thoi_han} tháng]',
+                  ), // Giả sử model có 2 trường này
                 ],
               ),
               const SizedBox(height: 6),
               Row(
-                children: const [
-                  Icon(Icons.person_outline, size: 18, color: Colors.grey),
-                  SizedBox(width: 6),
-                  Text('Người tạo: vi'),
+                children: [
+                  const Icon(
+                    Icons.person_outline,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 6),
+                  // Dữ liệu ĐỘNG: ten_nguoidung
+                  Text(
+                    'Người tạo: ${contract.ten_quanly}',
+                  ), // Giả sử model có trường ten_nguoidung
                 ],
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class ContractDetailScreen extends StatelessWidget {
-  const ContractDetailScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Chi tiết hợp đồng')),
-      body: const Center(child: Text('Thông tin chi tiết hợp đồng ở đây')),
     );
   }
 }

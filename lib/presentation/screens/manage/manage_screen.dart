@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
+import 'package:motelapp/logic/cubits/managet/manage_cubit.dart';
+import 'package:motelapp/logic/cubits/managet/manage_state.dart';
 import 'package:motelapp/presentation/screens/auth/login_screen.dart';
 import 'package:motelapp/router/app_router.dart';
 
@@ -12,6 +15,13 @@ class ManageScreen extends StatefulWidget {
 }
 
 class _ManageScreenState extends State<ManageScreen> {
+  @override
+  void initState() {
+    super.initState();
+    //gọi API khi mở màn hình
+    context.read<ManageCubit>().fetchManage();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +49,6 @@ class _ManageScreenState extends State<ManageScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        // SingleChildScrollView để đảm bảo nội dung cuộn được nếu quá dài
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -64,75 +73,117 @@ class _ManageScreenState extends State<ManageScreen> {
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.more_vert,
-                              color: Colors.grey,
+                  child: BlocBuilder<ManageCubit, ManageState>(
+                    builder: (context, state) {
+                      // Hiển thị trạng thái Loading
+                      if (state.status == ManageStatus.loading ||
+                          state.status == ManageStatus.initial) {
+                        return const Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      // Hiển thị trạng thái Error
+                      if (state.status == ManageStatus.error) {
+                        return Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Center(
+                            child: Text(
+                              'Lỗi: ${state.error ?? 'Không thể tải dữ liệu'}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red),
                             ),
-                            onPressed: () {
-                              // Xử lý khi nhấn nút menu ba chấm
-                            },
                           ),
-                        ),
-                        const CircleAvatar(
-                          radius: 40,
-                          backgroundColor: Colors.grey, // Màu nền của avatar
-                          child: Icon(
-                            Icons.person,
-                            size: 50,
-                            color: Colors.white,
+                        );
+                      }
+
+                      // Hiển thị trạng thái Loaded
+                      final manage = state.manage;
+
+                      // Kiểm tra nếu dữ liệu ManageModel là null (mặc dù state đã là loaded,
+                      // nên kiểm tra này là an toàn)
+                      if (manage == null) {
+                        return const Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: Center(
+                            child: Text('Không có dữ liệu quản lý.'),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'vi', // Tên người dùng
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        );
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
                           children: [
-                            const Text(
-                              'Số điện thoại',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            Text(
-                              '0846941020', // Số điện thoại
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                            Align(
+                              alignment: Alignment.topRight,
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.more_vert,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  // Xử lý khi nhấn nút menu ba chấm
+                                },
                               ),
+                            ),
+                            const CircleAvatar(
+                              radius: 40,
+                              backgroundColor:
+                                  Colors.grey, // Màu nền của avatar
+                              child: Icon(
+                                Icons.person,
+                                size: 50,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              manage.ten ?? 'Người dùng', // Tên người dùng
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Số điện thoại',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                                Text(
+                                  manage.soDienThoai ??
+                                      'Chưa cập nhật', // Số điện thoại
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Địa chỉ',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                                Text(
+                                  manage.diaChi ?? 'Chưa cập nhật',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Địa chỉ',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            Text(
-                              '............', // Địa chỉ (không rõ từ hình ảnh)
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -274,41 +325,42 @@ class _ManageScreenState extends State<ManageScreen> {
                             ),
                           ],
                         ),
-                        
                       ],
-                      
                     ),
                   ),
                 ),
               ),
-            const SizedBox(height: 24),
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16), // padding lề trái phải
-  child: SizedBox(
-    width: double.infinity,
-    child: ElevatedButton(
-      onPressed: ( )async {
-        await getIt<AuthCubit>().logout();
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ), // padding lề trái phải
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await getIt<AuthCubit>().logout();
 
-        getIt<AppRouter>().pushAndRemoveUntil(
-          const LoginScreen(),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red, // Màu nền đỏ
-        padding: const EdgeInsets.symmetric(vertical: 16), // padding dọc
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      child: const Text(
-        'Đăng xuất',
-        style: TextStyle(color: Colors.white),
-      ),
-    ),
-  ),
-   ),
-
+                      getIt<AppRouter>().pushAndRemoveUntil(
+                        const LoginScreen(),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red, // Màu nền đỏ
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                      ), // padding dọc
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Đăng xuất',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
             ],
             //Nút đăng xuất
           ),

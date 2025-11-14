@@ -3,7 +3,14 @@ import 'package:equatable/equatable.dart';
 
 import 'package:motelapp/data/models/user_model.dart';
 
-enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
+enum AuthStatus {
+  initial,
+  loading,
+  authenticated,
+  unauthenticated,
+  sessionExpired,
+  error,
+}
 
 class AuthState extends Equatable {
   final AuthStatus status;

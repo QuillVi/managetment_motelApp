@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:motelapp/data/models/lessee_model.dart';
-import 'package:motelapp/data/models/tanent_model.dart';
+
 import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/home/tanent_home/lessee_cubit.dart';
 import 'package:motelapp/logic/cubits/home/tanent_home/lessee_state.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/detail_tanent_in_room/detail_tanent_in_room.dart';
-import 'package:motelapp/presentation/screens/home/functions/function_tenant_home/detail_tenant/detail_tenant.dart';
+
 import 'package:motelapp/router/app_router.dart';
 
 class TenantHome extends StatefulWidget {
@@ -188,7 +188,7 @@ Widget _buildTenantCard(LesseeModel lessee) {
         child: Icon(Icons.person, color: Colors.white),
       ),
       title: Text(
-        lessee.tenNguoiDung,
+        lessee.tenNguoiThue,
         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
       subtitle: Text(
@@ -200,9 +200,9 @@ Widget _buildTenantCard(LesseeModel lessee) {
         style: TextStyle(color: Colors.green),
       ),
       onTap: () {
-        print('lessee ID: ${lessee.idNguoiDung}');
+        print('lessee ID: ${lessee.idNguoiThue}');
         getIt<AppRouter>().push(
-          DetailTanentInRoom(idNguoiDung: lessee.idNguoiDung),
+          DetailTanentInRoom(idNguoiThue: lessee.idNguoiThue),
         );
       },
     ),

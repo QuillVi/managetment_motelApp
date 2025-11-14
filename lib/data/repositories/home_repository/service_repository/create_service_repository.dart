@@ -1,24 +1,3 @@
-// import 'package:dio/dio.dart';
-// import 'package:motelapp/data/services/dio_client.dart';
-
-// class CreateServiceRepository {
-//   final Dio dio = DioClient().dio;
-
-//   Future<Map<String, dynamic>> createService(
-//     Map<String, dynamic> payload,
-//   ) async {
-//     final response = await dio.post('/service/createService', data: payload);
-
-//     if (response.statusCode == 200 && response.data['success'] == true) {
-//       // Tạo dịch vụ thành công
-//       print("Tạo dịch vụ thành công");
-//       return response.data;
-//     } else {
-//       throw Exception('Không thể tạo dịch vụ');
-//     }
-//   }
-// }
-
 import 'package:dio/dio.dart';
 import 'package:motelapp/data/services/dio_client.dart';
 

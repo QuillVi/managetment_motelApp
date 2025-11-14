@@ -6,6 +6,7 @@ import 'package:motelapp/logic/cubits/building/room_in_building/detail_room_cubi
 import 'package:motelapp/logic/cubits/building/room_in_building/detail_room_state.dart';
 import 'package:motelapp/logic/cubits/building/room_in_building/tanent_room_cubit.dart';
 import 'package:motelapp/logic/cubits/building/room_in_building/tanent_room_state.dart';
+import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/add_tanent_room.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/detail_tanent_in_room/detail_tanent_in_room.dart';
 import 'package:motelapp/router/app_router.dart';
 
@@ -61,7 +62,7 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                   getIt<AppRouter>().push(
                     DetailTanentInRoom(
                       // Truyền id người dùng tĩnh để test
-                      idNguoiDung: idNguoiDung,
+                      idNguoiThue: idNguoiDung,
                     ),
                   );
                 },
@@ -453,8 +454,8 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                 itemCount: tanentList.length,
                 itemBuilder: (context, index) {
                   final tanent = tanentList[index];
-                  print('ten nguoi thue id: ${tanent.idNguoiDung}');
-                  print('ten nguoi thue: ${tanent.tenNguoiDung}');
+                  print('ten nguoi thue id: ${tanent.idNguoiThue}');
+                  print('ten nguoi thue: ${tanent.idNguoiThue}');
                   return Container(
                     margin: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -482,7 +483,7 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                         child: Icon(Icons.person, color: Colors.white),
                       ),
                       title: Text(
-                        tanent.tenNguoiDung ?? 'Chưa có tên',
+                        tanent.tenNguoiThue ?? 'Chưa có tên',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text('Phòng ${tanent.tenPhong ?? ""}'),
@@ -492,7 +493,7 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                       ),
                       onTap: () {
                         // Xử lý khi người dùng nhấn vào thẻ người thuê
-                        _onShowOptionTanent(tanent.idNguoiDung!);
+                        _onShowOptionTanent(tanent.idNguoiThue!);
                       },
                     ),
                   );
@@ -503,7 +504,14 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                 bottom: 60,
                 right: 24,
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    getIt<AppRouter>().push(
+                      AddTanentRoom(
+                        roomId: widget.roomId,
+                        roomName: widget.roomName,
+                      ),
+                    );
+                  },
                   child: Container(
                     width: 60,
                     height: 60,
@@ -615,10 +623,19 @@ class ServiceCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Image.asset(
-                    "lib/assets/icons/$iconPath", // icon lấy từ thư mục lib/assets/icons
+                    "lib/assets/icons/$iconPath",
                     width: 20,
                     height: 20,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Hiển thị icon mặc định khi không tìm thấy file
+                      return Image.asset(
+                        "lib/assets/icons/default.png",
+                        width: 20,
+                        height: 20,
+                        fit: BoxFit.contain,
+                      );
+                    },
                   ),
                   const SizedBox(height: 8),
                   Text(

@@ -9,6 +9,9 @@ import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
 import 'package:motelapp/logic/cubits/auth/auth_state.dart';
 import 'package:motelapp/presentation/screens/buttonNavicationBar/buttonNavicationBar.dart';
 import 'package:motelapp/presentation/screens/auth/signup_screen.dart';
+import 'package:motelapp/presentation/screens/home/home_screen.dart';
+import 'package:motelapp/presentation/user_screens/homeUser/home_screen_user.dart';
+import 'package:motelapp/presentation/user_screens/userButtonNavicationBar/userButtonNavicationBar.dart';
 import 'package:motelapp/router/app_router.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -80,11 +83,31 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocConsumer<AuthCubit, AuthState>(
       bloc: getIt<AuthCubit>(),
       listener: (context, state) {
+        // ========== SỬA LOGIC Ở ĐÂY ==========
         if (state.status == AuthStatus.authenticated) {
-          getIt<AppRouter>().pushAndRemoveUntil(const Buttonnavicationbar());
+          // 1. Lấy vai trò từ state
+          final String vaiTro = state.user?.vaitro ?? '';
+          print('Đăng nhập thành công. Vai trò: $vaiTro');
+
+          // 2. Điều hướng dựa trên vai trò
+          if (vaiTro == 'ChuTro') {
+            getIt<AppRouter>().pushAndRemoveUntil(const Buttonnavicationbar());
+          } else if (vaiTro == 'NguoiThue') {
+            getIt<AppRouter>().pushAndRemoveUntil(
+              const UserButtonnavicationbar(),
+            );
+          } else {
+            // Trường hợp vai trò không xác định
+            UiUtils.showSnackBar(
+              context,
+              message: 'Vai trò không xác định. Vui lòng đăng nhập lại.',
+            );
+            getIt<AppRouter>().pushAndRemoveUntil(const LoginScreen());
+          }
         } else if (state.status == AuthStatus.error && state.error != null) {
           UiUtils.showSnackBar(context, message: state.error!);
         }
+        // =======================================
       },
       builder: (context, state) {
         return Scaffold(

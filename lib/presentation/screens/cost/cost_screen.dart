@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:motelapp/data/models/cost_model.dart';
+import 'package:motelapp/data/services/service_locator.dart';
+import 'package:motelapp/logic/cubits/cost/cost_cubit.dart';
+import 'package:motelapp/logic/cubits/cost/cost_state.dart';
+import 'package:motelapp/presentation/screens/cost/transaction_screen.dart';
+import 'package:motelapp/router/app_router.dart';
 
 class CostScreen extends StatefulWidget {
   const CostScreen({super.key});
@@ -10,80 +18,16 @@ class CostScreen extends StatefulWidget {
 
 class _CostScreenState extends State<CostScreen>
     with SingleTickerProviderStateMixin {
-  final List<Map<String, dynamic>> transactions = [
-    {
-      "date": "24",
-      "weekday": "Thứ Hai",
-      "monthYear": "tháng 3 2025",
-      "title": "Trả nợ",
-      "room": "số 1 , ví",
-      "amount": -3000000.0,
-    },
-    {
-      "date": "23",
-      "weekday": "Chủ Nhật",
-      "monthYear": "tháng 3 2025",
-      "title": "Thu nợ",
-      "room": "số 1 , ví",
-      "amount": 3000000.0,
-    },
-    {
-      "date": "22",
-      "weekday": "Thứ Bảy",
-      "monthYear": "tháng 3 2025",
-      "title": "Thu nợ",
-      "room": "số 1 , ví",
-      "amount": 3333333.0,
-    },
-    {
-      "date": "21",
-      "weekday": "Thứ Sáu",
-      "monthYear": "tháng 3 2025",
-      "title": "Tiền cọc phòng",
-      "room": "số 1 , ví",
-      "amount": 3000000.0,
-    },
-    {
-      "date": "20",
-      "weekday": "Thứ Năm",
-      "monthYear": "tháng 3 2025",
-      "title": "Trả tiền điện",
-      "room": "số 2 , ví",
-      "amount": -500000.0,
-    },
-    {
-      "date": "19",
-      "weekday": "Thứ Tư",
-      "monthYear": "tháng 3 2025",
-      "title": "Thu tiền nước",
-      "room": "số 3 , ví",
-      "amount": 200000.0,
-    },
-  ];
-
-  // Không cần _transactionTypeTabController nữa vì chúng ta sẽ dùng DefaultTabController lồng nhau.
-  // late TabController _transactionTypeTabController;
-
   @override
   void initState() {
     super.initState();
-    // Không cần khởi tạo TabController ở đây nữa
-    // _transactionTypeTabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    // Cũng không cần dispose nữa
-    // _transactionTypeTabController.dispose();
-    super.dispose();
+    initializeDateFormatting('vi', null);
+    context.read<CostCubit>().LoadListCost();
   }
 
   String _formatCurrency(double amount) {
-    return NumberFormat.currency(
-      locale: 'vi',
-      symbol: 'đ',
-      decimalDigits: 0,
-    ).format(amount);
+    // Dùng NumberFormat đơn giản hơn
+    return NumberFormat("#,##0", "vi_VN").format(amount);
   }
 
   @override
@@ -91,158 +35,394 @@ class _CostScreenState extends State<CostScreen>
     final List<Tab> monthTabs = [];
     final now = DateTime.now();
     for (int i = 1; i <= 12; i++) {
-      monthTabs.add(
-        Tab(text: DateFormat('MM-yyyy').format(DateTime(now.year, i))),
-      );
+      if (i == now.month) {
+        monthTabs.add(
+          const Tab(text: 'Tháng Này'), // Giữ nguyên thay đổi từ lần trước
+        );
+      } else {
+        monthTabs.add(
+          Tab(text: DateFormat('MM-yyyy').format(DateTime(now.year, i))),
+        );
+      }
     }
 
-    final double totalIncome = transactions
-        .where((t) => (t["amount"] as num) > 0)
-        .fold(0.0, (sum, t) => sum + (t["amount"] as num).toDouble());
-    final double totalOutcome = transactions
-        .where((t) => (t["amount"] as num) < 0)
-        .fold(0.0, (sum, t) => sum + (t["amount"] as num).toDouble());
-
-    return DefaultTabController(
-      // DefaultTabController chính cho các tháng
-      length: monthTabs.length,
-      initialIndex: now.month - 1,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Thu chi', style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.white,
-          centerTitle: true,
-          elevation: 0,
-          actions: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.filter_alt_outlined, color: Colors.orange),
-            ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.more_vert, color: Colors.grey),
-            ),
-          ],
-          bottom: TabBar(
-            isScrollable: true,
-            labelColor: Colors.green,
-            unselectedLabelColor: Colors.black45,
-            indicatorColor: Colors.green,
-            indicatorWeight: 2,
-            dividerHeight: 0,
-            tabs: monthTabs,
-          ),
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: TabBarView(
-                children: List.generate(monthTabs.length, (index) {
-                  final currentMonth = index + 1;
-                  final currentYear = now.year;
-                  // Gọi phương thức _buildDataMonth
-                  return _buildDataMonth(currentMonth, currentYear);
-                }),
+    return Stack(
+      children: [
+        DefaultTabController(
+          length: monthTabs.length,
+          initialIndex: now.month - 1,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text(
+                'Thu chi', // Cập nhật tiêu đề
+                style: TextStyle(color: Colors.black),
+              ),
+              backgroundColor: Colors.white,
+              centerTitle: true,
+              elevation: 0,
+              actions: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.filter_alt_outlined,
+                    color: Colors.orange,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.more_vert, color: Colors.grey),
+                ),
+              ],
+              bottom: TabBar(
+                isScrollable: true,
+                labelColor: Colors.green,
+                unselectedLabelColor: Colors.black45,
+                indicatorColor: Colors.green,
+                indicatorWeight: 2,
+                dividerHeight: 0,
+                tabs: monthTabs,
               ),
             ),
-          ],
+            body: Column(
+              children: [
+                Expanded(
+                  child: TabBarView(
+                    children: List.generate(monthTabs.length, (index) {
+                      final currentMonth = index + 1;
+                      final currentYear = now.year;
+                      return _buildDataMonth(currentMonth, currentYear);
+                    }),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+        // // Nút cộng tuỳ chỉnh bằng Positioned
+        // Positioned(
+        //   bottom: 84,
+        //   right: 24,
+        //   child: GestureDetector(
+        //     onTap: () {
+        //       //getIt<AppRouter>().push(const ());
+        //     },
+        //     child: Container(
+        //       width: 60,
+        //       height: 60,
+        //       decoration: const BoxDecoration(
+        //         color: Colors.green,
+        //         shape: BoxShape.circle,
+        //         boxShadow: [
+        //           BoxShadow(
+        //             color: Colors.black26,
+        //             blurRadius: 8,
+        //             offset: Offset(2, 4),
+        //           ),
+        //         ],
+        //       ),
+        //       child: const Icon(Icons.add, color: Colors.white, size: 30),
+        //     ),
+        //   ),
+        // ),
+      ],
     );
   }
 
   Widget _buildDataMonth(int month, int year) {
-    // Tính toán tổng tiền vào và tiền ra
-    // Trong thực tế, bạn sẽ lọc transactions dựa trên month và year
-    // hoặc lấy dữ liệu đã được lọc từ một nguồn khác.
-    // Ví dụ này đang sử dụng toàn bộ transactions mẫu, bạn sẽ cần điều chỉnh.
-    final double totalIncome = transactions
-        .where((t) => (t["amount"] as num) > 0)
-        .fold(0.0, (sum, t) => sum + (t["amount"] as num).toDouble());
+    return BlocBuilder<CostCubit, CostState>(
+      builder: (context, state) {
+        if (state.status == CostStatus.initial ||
+            state.status == CostStatus.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    final double totalOutcome = transactions
-        .where((t) => (t["amount"] as num) < 0)
-        .fold(0.0, (sum, t) => sum + (t["amount"] as num).toDouble());
+        if (state.status == CostStatus.error) {
+          return Center(
+            child: Text(state.errorMessage ?? 'Không thể tải dữ liệu'),
+          );
+        }
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Income/Outcome Summary Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  _buildSummaryRow("Tiền vào", totalIncome, Colors.green),
-                  const SizedBox(height: 8),
-                  _buildSummaryRow("Tiền ra", totalOutcome.abs(), Colors.red),
-                  const Divider(height: 16, thickness: 1, color: Colors.green),
-                  _buildSummaryRow(
-                    "Tổng",
-                    totalIncome + totalOutcome,
-                    Colors.green,
-                    isBold: true,
-                    fontSize: 18,
+        if (state.status == CostStatus.loaded) {
+          if (state.costModel == null || state.costModel!.isEmpty) {
+            return const Center(child: Text('Không có giao dịch nào'));
+          }
+
+          // Lọc danh sách theo tháng
+          final List<CostModel> monthlyCosts =
+              state.costModel!.where((cost) {
+                final paymentDate = DateTime.tryParse(cost.ngayThanhToan);
+                if (paymentDate == null) return false;
+                return paymentDate.month == month && paymentDate.year == year;
+              }).toList();
+
+          if (monthlyCosts.isEmpty) {
+            return const Center(child: Text('Không có dữ liệu cho tháng này'));
+          }
+
+          // Tính tổng Tiền vào / Tiền ra
+          double totalIncome = 0.0;
+          double totalOutcome = 0.0; // API của bạn chưa có tiền ra
+
+          for (var cost in monthlyCosts) {
+            final amount = double.tryParse(cost.tongThu) ?? 0.0;
+            if (amount >= 0) {
+              totalIncome += amount;
+            } else {
+              totalOutcome += amount; // Dành cho tương lai nếu có
+            }
+          }
+
+          // ----- THAY ĐỔI LỚN: NHÓM GIAO DỊCH THEO NGÀY -----
+          final Map<String, List<CostModel>> groupedCosts = {};
+          for (var cost in monthlyCosts) {
+            // Lấy key là ngày (ví dụ: "2025-11-06")
+            final dateKey = cost.ngayThanhToan.split('T')[0];
+            if (groupedCosts[dateKey] == null) {
+              groupedCosts[dateKey] = [];
+            }
+            groupedCosts[dateKey]!.add(cost);
+          }
+          // ----------------------------------------------------
+
+          return Column(
+            children: [
+              // THAY ĐỔI: Thẻ Tóm tắt (giống ảnh)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // DefaultTabController lồng nhau cho các tab loại giao dịch
-            DefaultTabController(
-              length: 2, // 2 tab: list và icon
-              child: Column(
-                children: [
-                  Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: TabBar(
-                          isScrollable: true,
-                          labelColor: Colors.green,
-                          unselectedLabelColor: Colors.grey,
-                          indicatorSize: TabBarIndicatorSize.label,
-                          indicatorColor: Colors.green,
-                          tabs: const [
-                            Tab(icon: Icon(Icons.list)),
-                            Tab(icon: Icon(Icons.show_chart)),
-                          ],
-                        ),
+                      _buildSummaryRow(
+                        'Tổng Tiền Cần Thu',
+                        totalIncome,
+                        Colors.green,
+                        isBold: true,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.4,
-                    child: TabBarView(
-                      children: [
-                        _buildTransactionList(
-                          transactions,
-                        ), // Vẫn dùng transactions mẫu, bạn cần lọc theo tháng
-                        Center(
-                          child: Text('Biểu đồ hoặc tổng quan tháng $month'),
-                        ), // Hiển thị tháng
+                ),
+              ),
+              // Tab lồng nhau (List/Chart)
+              DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                    TabBar(
+                      labelColor: Colors.green,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      indicatorColor: Colors.green,
+                      dividerHeight: 0,
+                      tabs: const [
+                        Tab(icon: Icon(Icons.list)),
+                        Tab(icon: Icon(Icons.show_chart)),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      // Điều chỉnh chiều cao cho phù hợp
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      child: TabBarView(
+                        children: [
+                          // THAY ĐỔI: Trỏ đến Widget danh sách đã nhóm
+                          _buildGroupedTransactionList(groupedCosts),
+                          Center(
+                            child: Text('Biểu đồ hoặc tổng quan tháng $month'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ],
+          );
+        }
+
+        return const Center(child: Text('Trạng thái không xác định'));
+      },
+    );
+  }
+
+  // THAY ĐỔI: Widget mới để xây dựng danh sách đã nhóm
+  Widget _buildGroupedTransactionList(
+    Map<String, List<CostModel>> groupedCosts,
+  ) {
+    // Chuyển Map thành List để build
+    final sortedEntries =
+        groupedCosts.entries.toList()..sort(
+          (a, b) => b.key.compareTo(a.key),
+        ); // Sắp xếp ngày mới nhất lên trước
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      itemCount: sortedEntries.length,
+      itemBuilder: (context, index) {
+        final entry = sortedEntries[index];
+        final date = DateTime.parse(entry.key);
+        final costsForDay = entry.value;
+
+        // Tính tổng cho ngày này
+        final double dailyTotal = costsForDay.fold(0.0, (sum, cost) {
+          return sum + (double.tryParse(cost.tongThu) ?? 0.0);
+        });
+
+        // --- BẮT ĐẦU THAY ĐỔI ---
+        // Bọc mọi thứ trong một Container có shadow
+        return Container(
+          margin: const EdgeInsets.symmetric(
+            vertical: 8.0,
+          ), // Khoảng cách giữa các ngày
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8.0), // Bo góc
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.2), // Màu của bóng
+                spreadRadius: 1,
+                blurRadius: 5,
+                offset: const Offset(0, 3), // Hướng đổ bóng
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // 1. Header của ngày (Bây giờ nằm trong Container)
+              // Chúng ta dùng lại y hệt widget _buildDayHeader của bạn
+              _buildDayHeader(date, dailyTotal),
+
+              // Thêm đường kẻ ngang như trong ảnh
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Divider(height: 1, color: Colors.grey.shade300),
+              ),
+
+              // 2. Danh sách các giao dịch của ngày đó
+              // Dùng Column vì đã ở trong Column rồi
+              Column(
+                children:
+                    costsForDay.map((cost) {
+                      // --- BẮT ĐẦU THAY ĐỔI ---
+                      // Bọc item bằng InkWell để có thể nhấn
+                      return InkWell(
+                        onTap: () {
+                          getIt<AppRouter>().push(
+                            TransactionScreen(transactionId: cost.idHoaDon),
+                          );
+                        },
+                        child: _buildTransactionItem(
+                          cost,
+                        ), // Widget item của bạn
+                      );
+                    }).toList(),
+              ),
+            ],
+          ),
+        );
+        // --- KẾT THÚC THAY ĐỔI ---
+      },
+    );
+  }
+
+  // THAY ĐỔI: Widget mới cho 1 item giao dịch (BỎ CARD)
+  Widget _buildTransactionItem(CostModel cost) {
+    final double amount = double.tryParse(cost.tongThu) ?? 0.0;
+
+    // THAY ĐỔI: Bỏ Card(), elevation, và margin.
+    // Chỉ giữ lại Padding và nội dung bên trong.
+    return Padding(
+      padding: const EdgeInsets.all(16.0), // Thêm padding cho item
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Tiêu đề (như bạn yêu cầu)
+                Text(
+                  "Tiền hóa đơn phòng",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                // 2. Subtitle (lấy từ code của bạn)
+                Text(
+                  "${cost.tenPhong}, ${cost.tenToaNha}",
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          // 3. Số tiền
+          Text(
+            _formatCurrency(amount),
+            style: const TextStyle(
+              color: Colors.black, // Màu đen như trong ảnh
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  // THAY ĐỔI: Widget mới cho Header của ngày (Sửa Padding)
+  Widget _buildDayHeader(DateTime date, double dailyTotal) {
+    return Padding(
+      // Sửa Padding từ symmetric(vertical: 8.0) thành EdgeInsets
+      padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
+      child: Row(
+        children: [
+          // Phần ngày tháng
+          Text(
+            DateFormat('dd').format(date),
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.orange,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                DateFormat('EEEE', 'vi').format(date), // Thứ
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'tháng ${DateFormat('MM yyyy').format(date)}', // Tháng năm
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          const Spacer(),
+          // Tổng tiền của ngày
+          Text(
+            _formatCurrency(dailyTotal),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // THAY ĐỔI: Hàm build row cho thẻ tóm tắt (đã sửa)
   Widget _buildSummaryRow(
     String label,
-    double amount,
+    double? amount,
     Color color, {
     bool isBold = false,
     double fontSize = 16,
@@ -258,88 +438,16 @@ class _CostScreenState extends State<CostScreen>
             color: Colors.black87,
           ),
         ),
-        Text(
-          _formatCurrency(amount),
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTransactionList(
-    List<Map<String, dynamic>> transactionsToDisplay,
-  ) {
-    return ListView.builder(
-      physics:
-          const NeverScrollableScrollPhysics(), // Vô hiệu hóa cuộn của ListView con
-      itemCount: transactionsToDisplay.length,
-      itemBuilder: (context, idx) {
-        final transaction = transactionsToDisplay[idx];
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      transaction["date"].toString(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    Text(
-                      transaction["weekday"].toString(),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    Text(
-                      transaction["monthYear"].toString(),
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        transaction["title"].toString(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        transaction["room"].toString(),
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  "${(transaction["amount"] as num) > 0 ? '+' : ''}${_formatCurrency((transaction["amount"] as num).toDouble()).toString()}",
-                  style: TextStyle(
-                    color:
-                        (transaction["amount"] as num) > 0
-                            ? Colors.green
-                            : Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+        if (amount != null) // Chỉ hiển thị tiền nếu có
+          Text(
+            _formatCurrency(amount),
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: color,
             ),
           ),
-        );
-      },
+      ],
     );
   }
 }
