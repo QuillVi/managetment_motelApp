@@ -122,20 +122,32 @@ class _AddServiceState extends State<AddService> {
                 title: const Text('Ảnh đại diện'),
                 trailing:
                     _selectedIcon == null
+                        // Chưa chọn thì hiện mũi tên
                         ? const Icon(Icons.chevron_right)
-                        : Icon(_selectedIcon!["icon"], size: 28),
-
+                        // Đã chọn thì hiện ẢNH ASSET
+                        : Image.asset(
+                          'lib/assets/icons/${_selectedIcon!["file"]}', // Dùng key "file"
+                          width: 32,
+                          height: 32,
+                          errorBuilder:
+                              (_, __, ___) => const Icon(
+                                Icons.broken_image,
+                                color: Colors.grey,
+                              ),
+                        ),
                 onTap: () async {
                   final result = await getIt<AppRouter>().push(
-                    AddImageService(),
+                    const AddImageService(), // Đảm bảo gọi đúng tên class
                   );
 
+                  // Kiểm tra kết quả trả về
                   if (result != null && result is Map<String, dynamic>) {
                     setState(() {
+                      // Lưu toàn bộ map nhận được: {"file": "icon_xe.png", "name": "Giữ xe"}
                       _selectedIcon = result;
                     });
 
-                    print("Chọn icon: ${result["name"]}");
+                    print("Đã chọn icon: ${result["file"]}");
                   }
                 },
               ),
@@ -269,7 +281,7 @@ class _AddServiceState extends State<AddService> {
                   "toa_nha_ids": selectedIds,
                   "icon":
                       _selectedIcon != null
-                          ? "${_selectedIcon!["name"]}.png"
+                          ? "${_selectedIcon!["file"]}"
                           : null,
                 };
 
