@@ -260,37 +260,55 @@ class _SelectRoomBillState extends State<SelectRoomBill>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// Phòng
-                Row(
-                  children: [
-                    Icon(Icons.home_outlined, size: 18, color: Colors.grey),
-                    SizedBox(width: 6),
-                    Text(
-                      roomName,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// Phòng
+                  Row(
+                    children: [
+                      Icon(Icons.home_outlined, size: 18, color: Colors.grey),
+                      SizedBox(width: 6),
+                      // BƯỚC 2: Thêm giới hạn dòng và dấu ... cho Tên phòng
+                      Expanded(
+                        // Dùng thêm Expanded nhỏ ở đây hoặc Flexible để Text bên trong không bị lỗi
+                        child: Text(
+                          roomName,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                          maxLines: 1, // Chỉ hiện 1 dòng
+                          overflow:
+                              TextOverflow.ellipsis, // Hiện dấu ... nếu dài
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
 
-                /// Địa chỉ
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 18,
-                      color: Colors.grey,
-                    ),
-                    SizedBox(width: 6),
-                    Text(address),
-                  ],
-                ),
-              ],
+                  /// Địa chỉ
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
+                      SizedBox(width: 6),
+                      // BƯỚC 2: Thêm giới hạn dòng và dấu ... cho Địa chỉ
+                      Expanded(
+                        child: Text(
+                          address,
+                          maxLines: 1, // Chỉ hiện 1 dòng
+                          overflow:
+                              TextOverflow.ellipsis, // Hiện dấu ... nếu dài
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
 
+            SizedBox(width: 8),
             // --- TAG TRẠNG THÁI ĐỘNG ---
             Padding(
               padding: const EdgeInsets.only(right: 8.0),

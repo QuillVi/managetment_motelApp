@@ -109,29 +109,18 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
     );
   }
 
-  // SỬA TÊN HÀM: _buildListTab => _buildUnclosedListTab (Tab 1)
   Widget _buildUnclosedListTab(BuildContext context) {
     return BlocBuilder<ClosureServiceCubit, ServiceState>(
       builder: (context, state) {
         if (state.status == ServiceStatus.loading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (state.status == ServiceStatus.failure) {
-          return Center(
-            child: Text(
-              'Lỗi tải dữ liệu: ${state.error ?? "Lỗi không xác định"}',
-            ),
-          );
-        }
 
-        // Lọc dữ liệu: CHƯA CHỐT (trang_thai_coc không phải là 'Đã tạo hợp đồng')
+        final safeList = state.dataClosureService ?? [];
         final unclosedList =
-            state.dataClosureService
-                ?.where(
-                  (item) => item.trang_thai_coc_phong != 'Đã tạo hợp đồng',
-                )
-                .toList() ??
-            [];
+            safeList
+                .where((item) => item.trangThaiChotDichVu == 'ChuaChot')
+                .toList();
 
         if (unclosedList.isEmpty) {
           return const Center(
@@ -144,7 +133,6 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
           itemCount: unclosedList.length,
           itemBuilder: (context, index) {
             final item = unclosedList[index];
-            // Chú ý: Cập nhật Text 'vi (1)' để hiển thị số lượng
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -152,14 +140,15 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
                     child: Text(
-                      'Tổng (${unclosedList.length})',
+                      'Tổng (${unclosedList.length})', // Hiển thị số lượng đúng
                       style: const TextStyle(
-                        color: Colors.green,
+                        color: Colors.green, // Màu đỏ cho cảnh báo chưa chốt
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                   ),
+                // Widget hiển thị item của bạn
                 _buildUnclosedServiceItem(context, item),
               ],
             );
@@ -169,26 +158,24 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
     );
   }
 
-  // THÊM HÀM MỚI: _buildClosedListTab (Tab 2)
   Widget _buildClosedListTab(BuildContext context) {
     return BlocBuilder<ClosureServiceCubit, ServiceState>(
       builder: (context, state) {
-        if (state.status != ServiceStatus.success ||
-            state.dataClosureService == null) {
-          // Chỉ hiển thị loading/error nếu tab 1 không xử lý
-          return const SizedBox();
+        // Tương tự tab 1
+        if (state.status == ServiceStatus.loading) {
+          return const Center(child: CircularProgressIndicator());
         }
 
-        // Lọc dữ liệu: ĐÃ CHỐT (trang_thai_coc là 'Đã tạo hợp đồng')
+        final safeList = state.dataClosureService ?? [];
+
+        // --- Lấy các item có trạng thái là 'DaChot' ---
         final closedList =
-            state.dataClosureService!
-                .where((item) => item.trang_thai_coc_phong == 'Đã tạo hợp đồng')
+            safeList
+                .where((item) => item.trangThaiChotDichVu == 'DaChot')
                 .toList();
 
         if (closedList.isEmpty) {
-          return const Center(
-            child: Text('Không có hợp đồng nào đã chốt dịch vụ.'),
-          );
+          return const Center(child: Text('Chưa có lịch sử chốt dịch vụ nào.'));
         }
 
         return ListView.builder(
@@ -205,12 +192,13 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
                     child: Text(
                       'Tổng (${closedList.length})',
                       style: const TextStyle(
-                        color: Colors.green,
+                        color: Colors.green, // Màu xanh cho đã hoàn thành
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                   ),
+                // Widget hiển thị item của bạn
                 _buildClosedServiceItem(context, item),
               ],
             );
@@ -220,7 +208,7 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
     );
   }
 
-  // THÊM HÀM MỚI: _buildServiceItem
+  //  _buildServiceItem
   Widget _buildUnclosedServiceItem(
     BuildContext context,
     ServiceClosureModel item,
@@ -262,7 +250,7 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
                       // Hiển thị Tên phòng và Tên Tòa Nhà
                       Expanded(
                         child: Text(
-                          '${item.ten_phong ?? 'N/A'} - ${item.ten_toanha ?? 'N/A'}',
+                          '${item.tenPhong ?? 'N/A'} - ${item.tenToanha ?? 'N/A'}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -272,13 +260,13 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
                         children: [
                           // Hiển thị Trạng thái cọc (Blue)
                           _buildStatusTag(
-                            item.trang_thai_coc_phong ?? 'N/A',
+                            item.trangThaiCocPhong ?? 'N/A',
                             Colors.blue,
                           ),
                           const SizedBox(height: 4),
                           // Hiển thị Trạng thái thuê (Red)
                           _buildStatusTag(
-                            item.trang_thai_phong ?? 'N/A',
+                            item.trangThaiPhong ?? 'N/A',
                             Colors.red,
                           ),
                         ],
@@ -297,7 +285,7 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
                       // Hiển thị Tên tòa nhà và Địa chỉ
                       Expanded(
                         child: Text(
-                          '${item.ten_toanha ?? 'N/A'}, ${item.dia_chi_toanha ?? 'N/A'}',
+                          '${item.tenToanha ?? 'N/A'}, ${item.diaChiToanha ?? 'N/A'}',
                           style: const TextStyle(color: Colors.black87),
                         ),
                       ),
@@ -353,7 +341,7 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
                       // Hiển thị Tên phòng và Tên người thuê
                       Expanded(
                         child: Text(
-                          '${item.ten_phong ?? 'N/A'} - ${item.ten_toanha ?? 'N/A'}',
+                          '${item.tenPhong ?? 'N/A'} - ${item.tenToanha ?? 'N/A'}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -363,13 +351,13 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
                         children: [
                           // Hiển thị Trạng thái cọc (Blue)
                           _buildStatusTag(
-                            item.trang_thai_coc_phong ?? 'N/A',
+                            item.trangThaiCocPhong ?? 'N/A',
                             Colors.blue,
                           ),
                           const SizedBox(height: 4),
                           // Hiển thị Trạng thái thuê (Red)
                           _buildStatusTag(
-                            item.trang_thai_phong ?? 'N/A',
+                            item.trangThaiPhong ?? 'N/A',
                             Colors.red,
                           ),
                         ],
@@ -388,7 +376,7 @@ class _ElectricwaterHomeState extends State<ElectricwaterHome> {
                       // Hiển thị Tên tòa nhà và Địa chỉ
                       Expanded(
                         child: Text(
-                          '${item.ten_toanha ?? 'N/A'}, ${item.dia_chi_toanha ?? 'N/A'}',
+                          '${item.tenToanha ?? 'N/A'}, ${item.diaChiToanha ?? 'N/A'}',
                           style: const TextStyle(color: Colors.black87),
                         ),
                       ),

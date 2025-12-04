@@ -27,7 +27,7 @@ class MakeBill extends StatefulWidget {
 }
 
 class _MakeBillState extends State<MakeBill> {
-  Map<String, double> _calculatedServicePrices = {};
+  final Map<String, double> _calculatedServicePrices = {};
   int? _selectedRoomId;
   int? _selectedContractId;
   String _selectedRoomName = 'Chọn phòng'; // Giá trị mặc định

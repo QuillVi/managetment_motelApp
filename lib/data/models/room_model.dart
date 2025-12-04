@@ -213,3 +213,39 @@ class SelectRoomManagetModel {
     );
   }
 }
+
+class SelectRoomIDManagetModel {
+  final int idPhong;
+  final String tenPhong;
+  final String tenToaNha;
+  final String giaPhong;
+  final String tienDatCoc;
+  final String diaChiToaNha;
+  final String trangThaiHopDong;
+  final String trangThaiPhong;
+
+  SelectRoomIDManagetModel({
+    required this.idPhong,
+    required this.tenPhong,
+    required this.tenToaNha,
+    required this.giaPhong,
+    required this.tienDatCoc,
+    required this.diaChiToaNha,
+    required this.trangThaiHopDong,
+    required this.trangThaiPhong,
+  });
+
+  /// Parse từ Map (API trả về)
+  factory SelectRoomIDManagetModel.fromMap(Map<String, dynamic> map) {
+    return SelectRoomIDManagetModel(
+      idPhong: map['id_phong'] ?? 0,
+      tenPhong: map['ten_phong'] ?? '',
+      tenToaNha: map['ten_toanha'] ?? '',
+      giaPhong: map['gia_phong'] ?? '0',
+      tienDatCoc: map['tien_dat_coc'] ?? '0',
+      diaChiToaNha: map['dia_chi_toanha'] ?? '',
+      trangThaiHopDong: map['trang_thai_hop_dong'] ?? 'ChuaCoHopDong',
+      trangThaiPhong: map['trang_thai_phong'] ?? 'Trống',
+    );
+  }
+}

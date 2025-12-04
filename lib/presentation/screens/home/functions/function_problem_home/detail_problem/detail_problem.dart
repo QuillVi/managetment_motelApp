@@ -15,6 +15,8 @@ class DetailProblem extends StatefulWidget {
 }
 
 class _DetailProblemState extends State<DetailProblem> {
+  // Biến kiểm tra xem có thay đổi dữ liệu không (để reload màn hình danh sách trước đó)
+  bool _isDataChanged = false;
   @override
   void initState() {
     super.initState();
@@ -39,242 +41,290 @@ class _DetailProblemState extends State<DetailProblem> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<DetailProblemCubit, DetailProblemState>(
-      builder: (context, state) {
-        // Loading
-        if (state.status == DetailProblemStatus.loading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+    // 1. Dùng BlocListener để lắng nghe sự kiện
+    return BlocListener<DetailProblemCubit, DetailProblemState>(
+      listener: (context, state) {
+        if (state.status == DetailProblemStatus.completing) {
+          // Hiện Dialog Loading khi đang gọi API
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder:
+                (context) => const Center(child: CircularProgressIndicator()),
+          );
+        } else if (state.status == DetailProblemStatus.completeSuccess) {
+          // 1. Tắt Dialog Loading
+          Navigator.of(context).pop();
+
+          // 2. Đánh dấu là dữ liệu đã thay đổi
+          _isDataChanged = true;
+
+          // 3. Hiện thông báo thành công
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã khắc phục sự cố thành công!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Lưu ý: Lúc này Cubit đã tự gọi lại loadDetailProblem() (như code ở bước trước)
+          // nên BlocBuilder bên dưới sẽ tự động vẽ lại giao diện mới (trạng thái Hoàn thành)
+        } else if (state.status == DetailProblemStatus.completeFailure) {
+          // Tắt Dialog Loading và hiện lỗi
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Lỗi: ${state.errorMessage}'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
+      },
+      child: BlocBuilder<DetailProblemCubit, DetailProblemState>(
+        builder: (context, state) {
+          // Loading
+          if (state.status == DetailProblemStatus.loading) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
 
-        // Error
-        if (state.status == DetailProblemStatus.error) {
-          print('Lỗi: ${state.errorMessage}');
-          return Scaffold(
-            body: Center(child: Text('Lỗi: ${state.errorMessage}')),
-          );
-        }
+          // Error
+          if (state.status == DetailProblemStatus.error) {
+            print('Lỗi: ${state.errorMessage}');
+            return Scaffold(
+              body: Center(child: Text('Lỗi: ${state.errorMessage}')),
+            );
+          }
 
-        // Loaded with data
-        if (state.status == DetailProblemStatus.loaded &&
-            state.detailProblem != null &&
-            state.detailProblem!.id_suco == widget.problemId) {
-          final detailProblem = state.detailProblem!;
+          // Loaded with data
+          if (state.status == DetailProblemStatus.loaded &&
+              state.detailProblem != null &&
+              state.detailProblem!.id_suco == widget.problemId) {
+            final detailProblem = state.detailProblem!;
 
-          return Scaffold(
-            backgroundColor: Colors.white,
-            appBar: AppBar(
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                onPressed: () {
-                  getIt<AppRouter>().push(ProblemHome());
-                },
-              ),
-              title: const Text(
-                'Sự cố',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            return Scaffold(
               backgroundColor: Colors.white,
-              elevation: 0,
-              centerTitle: true,
-            ),
-            body: ListView(
-              padding: const EdgeInsets.only(bottom: 100),
-              children: [
-                // Thông tin sự cố
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+              appBar: AppBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                  onPressed: () {
+                    getIt<AppRouter>().push(ProblemHome());
+                  },
+                ),
+                title: const Text(
+                  'Sự cố',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 14,
-                          offset: Offset(0, 6),
-                        ),
-                      ],
+                ),
+                backgroundColor: Colors.white,
+                elevation: 0,
+                centerTitle: true,
+              ),
+              body: ListView(
+                padding: const EdgeInsets.only(bottom: 100),
+                children: [
+                  // Thông tin sự cố
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
-                    child: Card(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
+                    child: Container(
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 14,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            /// Tiêu đề + mức độ
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.warning_amber,
-                                  color: Colors.grey,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    detailProblem.ten_suco,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: getMucDoColor(
-                                      detailProblem.muc_do,
-                                    ).withOpacity(0.7),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    detailProblem.muc_do ?? 'Thấp',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _buildInfoRow(
-                              Icons.home,
-                              '${detailProblem.ten_phong}, ${detailProblem.ten_toanha}',
-                            ),
-                            const SizedBox(height: 6),
-                            _buildInfoRow(
-                              Icons.location_on_outlined,
-                              detailProblem.dia_chi ?? 'Chưa có địa chỉ',
-                            ),
-                            const SizedBox(height: 6),
-                            _buildInfoRow(Icons.person_outline, 'vi'),
-                            const SizedBox(height: 6),
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: Builder(
-                                builder: (context) {
-                                  String label = '';
-                                  String dateText = '';
-
-                                  if (detailProblem.Trang_thai ==
-                                      'Hoàn thành') {
-                                    // Hiển thị ngày hoàn thành
-                                    label = 'Ngày hoàn thành: ';
-                                    if (detailProblem.updatedAt != null) {
-                                      final date = detailProblem.updatedAt!;
-                                      dateText =
-                                          '${date.day}/${date.month}/${date.year}';
-                                    } else {
-                                      dateText = 'Chưa có ngày hoàn thành';
-                                    }
-                                  } else if (detailProblem.Trang_thai ==
-                                      'Đang yêu cầu') {
-                                    // Hiển thị ngày tạo
-                                    label = 'Ngày tạo: ';
-                                    if (detailProblem.createdAt != null) {
-                                      final date = detailProblem.createdAt!;
-                                      dateText =
-                                          '${date.day}/${date.month}/${date.year}';
-                                    } else {
-                                      dateText = 'Chưa có ngày tạo';
-                                    }
-                                  } else {
-                                    // Trường hợp khác nếu có
-                                    label = 'Ngày cập nhật: ';
-                                    if (detailProblem.updatedAt != null) {
-                                      final date = detailProblem.updatedAt!;
-                                      dateText =
-                                          '${date.day}/${date.month}/${date.year}';
-                                    } else {
-                                      dateText = 'Chưa có ngày cập nhật';
-                                    }
-                                  }
-
-                                  return Text(
-                                    '$label$dateText',
-                                    style: TextStyle(
-                                      color: Colors.green[600],
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 12,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
+                      child: Card(
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Mô tả
-                _buildCardSection(
-                  'Mô tả sự cố',
-                  content: detailProblem.mo_ta_su_co ?? '',
-                ),
-                SizedBox(height: 16),
-                // Ảnh sự cố
-                _buildCardNoteSection('', content: 'Ảnh sự cố (tối đa 5 ảnh)'),
-                // Ghi chú
-                _buildCardSection(
-                  'Ghi chú',
-                  child: const TextField(
-                    maxLines: 5,
-                    decoration: InputDecoration.collapsed(
-                      hintText: 'Nhập tóm tắt sự cố',
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              /// Tiêu đề + mức độ
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.warning_amber,
+                                    color: Colors.grey,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      detailProblem.ten_suco,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: getMucDoColor(
+                                        detailProblem.muc_do,
+                                      ).withOpacity(0.7),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      detailProblem.muc_do ?? 'Thấp',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              _buildInfoRow(
+                                Icons.home,
+                                '${detailProblem.ten_phong}, ${detailProblem.ten_toanha}',
+                              ),
+                              const SizedBox(height: 6),
+                              _buildInfoRow(
+                                Icons.location_on_outlined,
+                                detailProblem.dia_chi ?? 'Chưa có địa chỉ',
+                              ),
+                              const SizedBox(height: 6),
+                              _buildInfoRow(Icons.person_outline, 'vi'),
+                              const SizedBox(height: 6),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: Builder(
+                                  builder: (context) {
+                                    String label = '';
+                                    String dateText = '';
 
-            // Nút Đã khắc phục: chỉ hiện khi trạng thái đang yêu cầu
-            bottomSheet:
-                (detailProblem.Trang_thai == 'Đang yêu cầu')
-                    ? Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                                    if (detailProblem.Trang_thai ==
+                                        'Hoàn thành') {
+                                      // Hiển thị ngày hoàn thành
+                                      label = 'Ngày hoàn thành: ';
+                                      if (detailProblem.updatedAt != null) {
+                                        final date = detailProblem.updatedAt!;
+                                        dateText =
+                                            '${date.day}/${date.month}/${date.year}';
+                                      } else {
+                                        dateText = 'Chưa có ngày hoàn thành';
+                                      }
+                                    } else if (detailProblem.Trang_thai ==
+                                        'Đang yêu cầu') {
+                                      // Hiển thị ngày tạo
+                                      label = 'Ngày tạo: ';
+                                      if (detailProblem.createdAt != null) {
+                                        final date = detailProblem.createdAt!;
+                                        dateText =
+                                            '${date.day}/${date.month}/${date.year}';
+                                      } else {
+                                        dateText = 'Chưa có ngày tạo';
+                                      }
+                                    } else {
+                                      // Trường hợp khác nếu có
+                                      label = 'Ngày cập nhật: ';
+                                      if (detailProblem.updatedAt != null) {
+                                        final date = detailProblem.updatedAt!;
+                                        dateText =
+                                            '${date.day}/${date.month}/${date.year}';
+                                      } else {
+                                        dateText = 'Chưa có ngày cập nhật';
+                                      }
+                                    }
+
+                                    return Text(
+                                      '$label$dateText',
+                                      style: TextStyle(
+                                        color: Colors.green[600],
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 12,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        onPressed: () {
-                          // TODO: Gọi cubit để cập nhật trạng thái sang "Hoàn thành"
-                          // Ví dụ:
-                          // context.read<DetailProblemCubit>().markCompleted(detailProblem.id_suco);
-                        },
-                        child: const Text(
-                          'Đã khắc phục',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
                       ),
-                    )
-                    : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Mô tả
+                  _buildCardSection(
+                    'Mô tả sự cố',
+                    content: detailProblem.mo_ta_su_co ?? '',
+                  ),
+                  SizedBox(height: 16),
+                  // Ảnh sự cố
+                  _buildCardNoteSection(
+                    '',
+                    content: 'Ảnh sự cố (tối đa 5 ảnh)',
+                  ),
+                  // Ghi chú
+                  _buildCardSection(
+                    'Ghi chú',
+                    child: const TextField(
+                      maxLines: 5,
+                      decoration: InputDecoration.collapsed(
+                        hintText: 'Nhập tóm tắt sự cố',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Nút Đã khắc phục: chỉ hiện khi trạng thái đang yêu cầu
+              bottomSheet:
+                  (detailProblem.Trang_thai == 'Đang yêu cầu')
+                      ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            // TODO: Gọi cubit để cập nhật trạng thái sang "Hoàn thành"
+                            // Ví dụ:
+                            context.read<DetailProblemCubit>().markAsComplete(
+                              widget.problemId,
+                            );
+
+                            //trả về màn hình trước
+                            getIt<AppRouter>().push(ProblemHome());
+                          },
+                          child: const Text(
+                            'Đã khắc phục',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                      )
+                      : null,
+            );
+          }
+          return const Scaffold(
+            body: Center(child: Text('Không tìm thấy chi tiết sự cố')),
           );
-        }
-        return const Scaffold(
-          body: Center(child: Text('Không tìm thấy chi tiết sự cố')),
-        );
-      },
+        },
+      ),
     );
   }
 

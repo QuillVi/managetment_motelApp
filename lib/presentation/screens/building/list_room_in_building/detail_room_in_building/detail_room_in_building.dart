@@ -8,6 +8,7 @@ import 'package:motelapp/logic/cubits/building/room_in_building/tanent_room_cubi
 import 'package:motelapp/logic/cubits/building/room_in_building/tanent_room_state.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/add_tanent_room.dart';
 import 'package:motelapp/presentation/screens/building/list_room_in_building/detail_room_in_building/detail_tanent_in_room/detail_tanent_in_room.dart';
+import 'package:motelapp/presentation/screens/home/functions/function_contract_home/add_contract/add_contract.dart';
 import 'package:motelapp/router/app_router.dart';
 
 class DetailRoomInBuilding extends StatefulWidget {
@@ -79,6 +80,65 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
           ),
         );
       },
+    );
+  }
+
+  // Hàm hiển thị Popup xác nhận (để bên ngoài widget build)
+  void _showConfirmContractDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Center(
+              child: Text(
+                "Xác nhận",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            content: const Text(
+              "Phòng chưa có hợp đồng, bạn cần tạo hợp đồng để thêm người thuê.",
+              textAlign: TextAlign.center,
+            ),
+            actionsAlignment: MainAxisAlignment.spaceAround,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Huỷ", style: TextStyle(color: Colors.green)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(ctx); // Tắt cái popup xác nhận trước
+
+                  // 2. Dùng await để đợi kết quả trả về từ màn hình AddContract
+                  // Lưu ý: Nếu bạn dùng AppRouter thì cũng tương tự: final result = await getIt<AppRouter>().push(...)
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddContract(),
+                    ),
+                  );
+
+                  // 3. Kiểm tra nếu kết quả trả về là true (tức là tạo thành công)
+                  if (result == true) {
+                    // Kiểm tra context còn tồn tại không để tránh lỗi
+                    if (!context.mounted) return;
+
+                    // 4. Gọi lại hàm load API trong Cubit để làm mới danh sách
+                    context.read<TanentRoomCubit>().loadTanentRoom(
+                      widget.roomId,
+                    );
+                  }
+                },
+                child: const Text(
+                  "Tạo hợp đồng",
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
     );
   }
 
@@ -304,8 +364,8 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                           return Center(
                             child: ServiceCard(
                               iconPath: serviceroom.icon!,
-                              title: serviceroom.ten_dichvu!,
-                              price: serviceroom.phi_dichvu!.toString(),
+                              title: serviceroom.ten_dichvu,
+                              price: serviceroom.phi_dichvu.toString(),
                             ),
                           );
                         }),
@@ -493,7 +553,7 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                       ),
                       onTap: () {
                         // Xử lý khi người dùng nhấn vào thẻ người thuê
-                        _onShowOptionTanent(tanent.idNguoiThue!);
+                        _onShowOptionTanent(tanent.idNguoiThue);
                       },
                     ),
                   );
@@ -505,12 +565,22 @@ class _DetailRoomInBuildingState extends State<DetailRoomInBuilding>
                 right: 24,
                 child: GestureDetector(
                   onTap: () {
-                    getIt<AppRouter>().push(
-                      AddTanentRoom(
-                        roomId: widget.roomId,
-                        roomName: widget.roomName,
-                      ),
-                    );
+                    // --- LOGIC KIỂM TRA DỮ LIỆU Ở ĐÂY ---
+
+                    if (tanentList.isEmpty) {
+                      // CASE 1: API trả về [], chưa có người thuê
+                      // -> Hiện Popup yêu cầu tạo hợp đồng
+                      _showConfirmContractDialog(context);
+                    } else {
+                      // CASE 2: API có dữ liệu
+                      // -> Chuyển màn hình thêm người thuê
+                      getIt<AppRouter>().push(
+                        AddTanentRoom(
+                          roomId: widget.roomId,
+                          roomName: widget.roomName,
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     width: 60,

@@ -146,29 +146,27 @@ class _SelectServiceState extends State<SelectService> {
 
                             return Row(
                               children: [
-                                ...rowItems
-                                    .map(
-                                      (service) => Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: GestureDetector(
-                                            // 4. Bọc ServiceCard bằng GestureDetector để xử lý Tap
-                                            onTap:
-                                                () => _toggleServiceSelection(
-                                                  service,
-                                                ),
-                                            child: ServiceCard(
-                                              service: service,
-                                              isSelected: _selectedServices
-                                                  .contains(
-                                                    service,
-                                                  ), // Truyền trạng thái chọn
+                                ...rowItems.map(
+                                  (service) => Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: GestureDetector(
+                                        // 4. Bọc ServiceCard bằng GestureDetector để xử lý Tap
+                                        onTap:
+                                            () => _toggleServiceSelection(
+                                              service,
                                             ),
-                                          ),
+                                        child: ServiceCard(
+                                          service: service,
+                                          isSelected: _selectedServices
+                                              .contains(
+                                                service,
+                                              ), // Truyền trạng thái chọn
                                         ),
                                       ),
-                                    )
-                                    .toList(),
+                                    ),
+                                  ),
+                                ),
 
                                 // Tạo khoảng trống cho hàng chưa đủ 3 item
                                 ...List.generate(

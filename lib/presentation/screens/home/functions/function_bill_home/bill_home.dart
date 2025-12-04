@@ -22,6 +22,9 @@ class _BillHomeState extends State<BillHome> with TickerProviderStateMixin {
   late List<String> monthLabels;
   late int currentMonthIndex;
 
+  // Biến để lưu trữ từ khoá tìm kiếm
+  String _searchKey = '';
+
   // Danh sách các trạng thái (phải khớp với các tab)
   final List<String> statusStrings = [
     'Chưa tạo hóa đơn',
@@ -180,7 +183,6 @@ class _BillHomeState extends State<BillHome> with TickerProviderStateMixin {
     );
   }
 
-  // Tôi đã tách AppBar ra để code `build` gọn gàng hơn
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.white,
@@ -195,10 +197,6 @@ class _BillHomeState extends State<BillHome> with TickerProviderStateMixin {
         style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.filter_alt_outlined, color: Colors.orange),
-          onPressed: () {},
-        ),
         IconButton(
           icon: const Icon(Icons.more_vert, color: Colors.black),
           onPressed: () {},
@@ -255,13 +253,30 @@ class _BillHomeState extends State<BillHome> with TickerProviderStateMixin {
 
   // Sửa đổi _buildInvoiceList để nhận vào 1 danh sách
   Widget _buildInvoiceList(List<BillModel> bills) {
+    // --- 1. LOGIC LỌC DỮ LIỆU ---
+    // Lọc danh sách bills dựa trên từ khóa _searchKey
+    final filteredBills =
+        bills.where((bill) {
+          final keyword = _searchKey.toLowerCase();
+
+          // Lấy các tên cần tìm, chuyển về chữ thường và kiểm tra null
+          final tenPhong = bill.ten_phong?.toLowerCase() ?? '';
+          final tenToanha = bill.ten_toanha?.toLowerCase() ?? '';
+          final tenNguoiThue = bill.ten_nguoithue?.toLowerCase() ?? '';
+
+          // Điều kiện: Từ khóa xuất hiện trong Tên phòng HOẶC Tòa nhà HOẶC Người thuê
+          return tenPhong.contains(keyword) ||
+              tenToanha.contains(keyword) ||
+              tenNguoiThue.contains(keyword);
+        }).toList();
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           TextField(
             decoration: InputDecoration(
-              hintText: 'Tìm kiếm theo tên',
+              hintText: 'Tìm kiếm theo tên phòng, người thuê...',
               prefixIcon: const Icon(Icons.search),
               filled: true,
               fillColor: Colors.grey[200],
@@ -269,80 +284,119 @@ class _BillHomeState extends State<BillHome> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
               ),
+              // Thêm nút X để xóa nhanh nội dung tìm kiếm
+              suffixIcon:
+                  _searchKey.isNotEmpty
+                      ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchKey = '';
+                          });
+                        },
+                      )
+                      : null,
             ),
+            // --- 2. CẬP NHẬT TỪ KHÓA ---
             onChanged: (value) {
-              // TODO: Thêm logic tìm kiếm
-              // Bạn có thể cần một Cubit khác hoặc
-              // biến local state để quản lý bộ lọc tìm kiếm
+              setState(() {
+                _searchKey = value;
+              });
             },
           ),
           const SizedBox(height: 16),
-          // Sử dụng Expanded và ListView.builder để hiển thị danh sách
+
+          // --- 3. HIỂN THỊ DANH SÁCH ĐÃ LỌC ---
           Expanded(
-            child: ListView.builder(
-              itemCount: bills.length,
-              itemBuilder: (context, index) {
-                final bill = bills[index];
-                // Đây là card mẫu của bạn, giờ được đổ dữ liệu thật
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      getIt<AppRouter>().push(
-                        MakeBill(
-                          idHoaDon: bill.id_hoadon,
-                          idNguoiThue: bill.id_nguoithue,
-                        ),
-                      );
-                    },
-                    child: Card(
-                      color: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        leading: const Icon(Icons.receipt_long_outlined),
-                        // Dữ liệu động từ bill model
-                        title: Text('${bill.ten_phong} - ${bill.ten_toanha}'),
-                        subtitle: Text(bill.ten_nguoithue), // Tên người thuê
-                        // Hiển thị trạng thái thuê của phòng
-                        trailing: _buildStatusTag(bill.trang_thai_thue_phong),
-                      ),
+            child:
+                filteredBills.isEmpty
+                    ? const Center(child: Text("Không tìm thấy kết quả nào"))
+                    : ListView.builder(
+                      itemCount: filteredBills.length, // Dùng danh sách đã lọc
+                      itemBuilder: (context, index) {
+                        final bill =
+                            filteredBills[index]; // Lấy item từ danh sách đã lọc
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: InkWell(
+                            onTap: () {
+                              getIt<AppRouter>().push(
+                                MakeBill(
+                                  idHoaDon: bill.id_hoadon,
+                                  idNguoiThue: bill.id_nguoithue,
+                                ),
+                              );
+                            },
+                            child: Card(
+                              color: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                leading: const Icon(
+                                  Icons.receipt_long_outlined,
+                                ),
+                                title: Text(
+                                  '${bill.ten_phong} - ${bill.ten_toanha}',
+                                ),
+                                subtitle: Text(
+                                  bill.ten_nguoithue ?? 'Chưa có người thuê',
+                                ),
+
+                                trailing: _buildStatusTag(
+                                  bill.trang_thai_thue_phong ?? '',
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                );
-              },
-            ),
           ),
         ],
       ),
     );
   }
 
-  // HÀM MỚI DÀNH CHO HÌNH 2 (Hóa đơn chi tiết)
   Widget _buildDetailedInvoiceList(List<BillModel> bills) {
     // Bộ định dạng số tiền
-    final _formatter = NumberFormat('#,###');
+    final formatter = NumberFormat('#,###');
 
+    // --- 1. LOGIC LỌC DỮ LIỆU ---
+    // Lọc danh sách bills dựa trên từ khóa _searchKey
+    final filteredBills =
+        bills.where((bill) {
+          final keyword = _searchKey.toLowerCase();
+
+          // Lấy các dữ liệu cần tìm kiếm, chuyển về chữ thường để so sánh
+          final idHoaDon = bill.id_hoadon?.toString().toLowerCase() ?? '';
+          final tenPhong = bill.ten_phong?.toLowerCase() ?? '';
+          final tenToanha = bill.ten_toanha?.toLowerCase() ?? '';
+
+          // Điều kiện: Từ khóa xuất hiện trong ID hóa đơn HOẶC tên phòng HOẶC tên tòa nhà
+          return idHoaDon.contains(keyword) ||
+              tenPhong.contains(keyword) ||
+              tenToanha.contains(keyword);
+        }).toList();
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           TextField(
             decoration: InputDecoration(
-              // ⭐️ Hint text khác
               hintText: 'Tìm theo số hóa đơn, phòng, tòa nhà...',
               prefixIcon: const Icon(Icons.search),
               filled: true,
@@ -351,128 +405,144 @@ class _BillHomeState extends State<BillHome> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
               ),
+              // Thêm nút X để xóa nhanh nội dung tìm kiếm (Trải nghiệm người dùng tốt hơn)
+              suffixIcon:
+                  _searchKey.isNotEmpty
+                      ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchKey = '';
+                          });
+                        },
+                      )
+                      : null,
             ),
+            // --- 2. CẬP NHẬT TỪ KHÓA KHI NHẬP ---
             onChanged: (value) {
-              // TODO: Thêm logic tìm kiếm
+              setState(() {
+                _searchKey = value;
+              });
             },
           ),
           const SizedBox(height: 16),
+
+          // hiển thị danh sách đã lọc
           Expanded(
-            child: ListView.builder(
-              itemCount: bills.length,
-              itemBuilder: (context, index) {
-                final bill = bills[index];
+            child:
+                filteredBills.isEmpty
+                    ? const Center(child: Text("Không tìm thấy hóa đơn nào"))
+                    : ListView.builder(
+                      // Quan trọng: Dùng filteredBills thay vì bills gốc
+                      itemCount: filteredBills.length,
+                      itemBuilder: (context, index) {
+                        final bill = filteredBills[index];
 
-                // ⭐️ Thẻ (Card) chi tiết theo Hình 2
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      getIt<AppRouter>().push(
-                        DetailBill(idHoaDon: bill.id_hoadon),
-                      );
-                    },
-                    child: Card(
-                      color: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      // ⭐️ Bố cục bên trong Card
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Dòng 1: Mã HĐ và Tổng tiền
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  // Giả sử 'ten_hoadon' là mã HĐ, ví dụ: #089279
-                                  '#${bill.id_hoadon ?? 'Chưa lập hóa đơn'}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: InkWell(
+                            onTap: () {
+                              getIt<AppRouter>().push(
+                                DetailBill(idHoaDon: bill.id_hoadon),
+                              );
+                            },
+                            child: Card(
+                              color: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '#${bill.id_hoadon ?? 'Chưa lập hóa đơn'}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${formatter.format(bill.tong_hop_tien ?? 0)} đ',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const Divider(height: 24),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.home_outlined,
+                                          color: Colors.grey[700],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '${bill.ten_phong} - ${bill.ten_toanha}',
+                                          style: const TextStyle(fontSize: 15),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Tiền phòng',
+                                          style: TextStyle(
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        Text(
+                                          '${formatter.format(bill.gia_phong ?? 0)} đ',
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Tiền dịch vụ',
+                                          style: TextStyle(
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        Text(
+                                          '${formatter.format(bill.tong_tien_dich_vu ?? 0)} đ',
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  // Giả sử 'tong_hop_len' là tổng tiền cuối
-                                  '${_formatter.format(bill.tong_hop_tien ?? 0)} đ',
-
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                            const Divider(height: 24),
-
-                            // Dòng 2: Tên phòng + Tòa nhà
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.home_outlined,
-                                  color: Colors.grey[700],
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${bill.ten_phong} - ${bill.ten_toanha}',
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Dòng 3: Tiền phòng
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Tiền phòng',
-                                  style: TextStyle(color: Colors.grey[700]),
-                                ),
-                                Text(
-                                  '${_formatter.format(bill.gia_phong ?? 0)} đ',
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-
-                            // Dòng 4: Tiền dịch vụ
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Tiền dịch vụ',
-                                  style: TextStyle(color: Colors.grey[700]),
-                                ),
-                                Text(
-                                  '${_formatter.format(bill.tong_tien_dich_vu ?? 0)} đ',
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                );
-              },
-            ),
           ),
         ],
       ),

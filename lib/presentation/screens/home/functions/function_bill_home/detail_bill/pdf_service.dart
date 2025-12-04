@@ -54,7 +54,7 @@ String convertNumberToVietnamese(double number) {
   }
   // Thư viện sẽ chuyển, ví dụ: "năm triệu..."
   // .toUpperCase() để thành "NĂM TRIỆU..."
-  return intValue.toVietnameseWords().toUpperCase() + " ĐỒNG";
+  return "${intValue.toVietnameseWords().toUpperCase()} ĐỒNG";
 }
 
 // Hàm này sẽ tạo PDF và trả về dữ liệu Byte
@@ -134,8 +134,8 @@ pw.Widget buildPaidBillTemplate(DetailBillModel bill, String formattedDate) {
         pw.Table.fromTextArray(
           headers: ['Dịch vụ', 'Thành tiền'],
           data: <List<String>>[
-            ['Tiền phòng', '${bill.giaPhong.toStringAsFixed(0)}'],
-            ['Tổng tiền dịch vụ', '${bill.tongTienDichVu.toStringAsFixed(0)}'],
+            ['Tiền phòng', (bill.giaPhong.toStringAsFixed(0))],
+            ['Tổng tiền dịch vụ', (bill.tongTienDichVu.toStringAsFixed(0))],
           ],
           headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           cellAlignment: pw.Alignment.centerRight,
@@ -194,8 +194,8 @@ pw.Widget buildUnpaidBillTemplate(DetailBillModel bill, String formattedDate) {
         pw.Table.fromTextArray(
           headers: ['Dịch vụ', 'Thành tiền'],
           data: <List<String>>[
-            ['Tiền phòng', '${bill.giaPhong.toStringAsFixed(0)}'],
-            ['Tổng tiền dịch vụ', '${bill.tongTienDichVu.toStringAsFixed(0)}'],
+            ['Tiền phòng', (bill.giaPhong.toStringAsFixed(0))],
+            ['Tổng tiền dịch vụ', (bill.tongTienDichVu.toStringAsFixed(0))],
           ],
           headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           cellAlignment: pw.Alignment.centerRight,

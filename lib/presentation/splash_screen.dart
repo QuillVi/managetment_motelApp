@@ -5,8 +5,6 @@ import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
 import 'package:motelapp/logic/cubits/auth/auth_state.dart';
 import 'package:motelapp/presentation/screens/auth/login_screen.dart';
 import 'package:motelapp/presentation/screens/buttonNavicationBar/buttonNavicationBar.dart';
-import 'package:motelapp/presentation/screens/home/home_screen.dart';
-import 'package:motelapp/presentation/user_screens/homeUser/home_screen_user.dart';
 import 'package:motelapp/presentation/user_screens/userButtonNavicationBar/userButtonNavicationBar.dart';
 import 'package:motelapp/router/app_router.dart';
 

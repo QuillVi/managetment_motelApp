@@ -1,6 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
-
-import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:motelapp/data/repositories/auth_repository.dart';
 import 'package:motelapp/data/repositories/bill_repository/bill_repository.dart';
@@ -28,7 +25,6 @@ import 'package:motelapp/data/repositories/room_repository/detail_tanent_reposit
 import 'package:motelapp/data/repositories/room_repository/tanent_room_repository.dart';
 import 'package:motelapp/data/repositories/stake_repository/stake_repository.dart';
 import 'package:motelapp/data/services/fcm_service.dart';
-import 'package:motelapp/firebase_options.dart';
 import 'package:motelapp/logic/cubits/auth/auth_cubit.dart';
 import 'package:motelapp/logic/cubits/building/amenity_cubit.dart';
 import 'package:motelapp/logic/cubits/building/create_building_cubit.dart';
@@ -138,7 +134,10 @@ Future<void> setupServiceLocator() async {
   );
 
   getIt.registerLazySingleton(
-    () => TanentRoomCubit(tanentRoomRepository: getIt<TanentRoomRepository>()),
+    () => TanentRoomCubit(
+      tanentRoomRepository: getIt<TanentRoomRepository>(),
+      addTanentRoomRepository: getIt<AddTanentRoomRepository>(),
+    ),
   );
 
   getIt.registerLazySingleton(
@@ -153,7 +152,10 @@ Future<void> setupServiceLocator() async {
     ),
   );
   getIt.registerLazySingleton(
-    () => LesseeCubit(listTanentRepository: getIt<ListLesseeRepository>()),
+    () => LesseeCubit(
+      listTanentRepository: getIt<ListLesseeRepository>(),
+      addTanentRoomRepository: getIt<AddTanentRoomRepository>(),
+    ),
   );
 
   getIt.registerLazySingleton(

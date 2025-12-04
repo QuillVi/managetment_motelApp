@@ -25,44 +25,42 @@ class ServiceModel {
 }
 
 class ServiceClosureModel {
-  // --- Các trường đã cập nhật ---
-  final int id_phong;
-  final int id_toanha;
-  final String? ten_phong;
-  final String? ten_toanha;
-  final String? dia_chi_toanha;
-  final String? trang_thai_coc_phong;
-  final String? trang_thai_chot_dich_vu;
-  final String? trang_thai_phong;
+  //Bỏ dấu '?' vì ta sẽ xử lý null ngay trong factory
+  final int idPhong;
+  final int idToanha;
+  final String tenPhong;
+  final String tenToanha;
+  final String diaChiToanha;
+  final String trangThaiCocPhong;
+  final String? trangThaiChotDichVu;
+  final String trangThaiPhong;
 
   ServiceClosureModel({
-    // Cập nhật constructor
-    required this.id_phong,
-    required this.id_toanha,
-    this.ten_phong,
-    this.ten_toanha,
-    this.dia_chi_toanha,
-    this.trang_thai_coc_phong,
-    this.trang_thai_chot_dich_vu,
-    this.trang_thai_phong,
+    required this.idPhong,
+    required this.idToanha,
+    required this.tenPhong,
+    required this.tenToanha,
+    required this.diaChiToanha,
+    required this.trangThaiCocPhong,
+    this.trangThaiChotDichVu,
+    required this.trangThaiPhong,
   });
 
-  // --- Cập nhật factory ---
   factory ServiceClosureModel.fromMap(Map<String, dynamic> map) {
     return ServiceClosureModel(
-      // Các trường int (số nguyên), giả sử không bao giờ null từ API
-      // Nếu có thể null, bạn nên dùng: map['id_phong'] ?? 0
-      id_phong: map['id_phong'],
-      id_toanha: map['id_toanha'],
+      // Mapping từ key JSON (snake_case) sang biến Dart (camelCase)
 
-      // Các trường String (chuỗi) khớp với key của JSON
-      // Giữ logic '?? ""' (chuỗi rỗng) giống model gốc của bạn
-      ten_phong: map['ten_phong'] ?? '',
-      ten_toanha: map['ten_toanha'] ?? '',
-      dia_chi_toanha: map['dia_chi_toanha'] ?? '',
-      trang_thai_coc_phong: map['trang_thai_coc_phong'] ?? '',
-      trang_thai_chot_dich_vu: map['trang_thai_chot_dich_vu'] ?? '',
-      trang_thai_phong: map['trang_thai_phong'] ?? '',
+      // Thêm ?? 0 để tránh crash nếu API trả null hoặc thiếu key
+      idPhong: map['id_phong'] ?? 0,
+      idToanha: map['id_toanha'] ?? 0,
+
+      // Luôn trả về chuỗi rỗng nếu null, giúp UI không bị lỗi hiển thị
+      tenPhong: map['ten_phong'] ?? '',
+      tenToanha: map['ten_toanha'] ?? '',
+      diaChiToanha: map['dia_chi_toanha'] ?? '',
+      trangThaiCocPhong: map['trang_thai_coc_phong'] ?? '',
+      trangThaiChotDichVu: map['trang_thai_chot_dich_vu'] ?? '',
+      trangThaiPhong: map['trang_thai_phong'] ?? '',
     );
   }
 }

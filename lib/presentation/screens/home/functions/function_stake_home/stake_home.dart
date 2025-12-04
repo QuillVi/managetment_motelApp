@@ -6,24 +6,9 @@ import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/home/stake_home/stake_cubit.dart';
 import 'package:motelapp/logic/cubits/home/stake_home/stake_state.dart';
 import 'package:motelapp/presentation/screens/buttonNavicationBar/buttonNavicationBar.dart';
+import 'package:motelapp/presentation/screens/home/functions/function_stake_home/add_stake/add_stake.dart';
 import 'package:motelapp/presentation/screens/home/functions/function_stake_home/detail_stake/detail_stake.dart';
 import 'package:motelapp/router/app_router.dart';
-import 'package:provider/provider.dart';
-
-// Model Tổng hợp để đơn giản hóa việc truyền dữ liệu vào Widget Thống kê
-class StakeSummary {
-  final String dangChoValue;
-  final String quaHanValue;
-  final String huyCocValue;
-  final String daTaoHDValue;
-
-  StakeSummary({
-    required this.dangChoValue,
-    required this.quaHanValue,
-    required this.huyCocValue,
-    required this.daTaoHDValue,
-  });
-}
 
 class StakeHome extends StatefulWidget {
   const StakeHome({super.key});
@@ -33,26 +18,70 @@ class StakeHome extends StatefulWidget {
 }
 
 class _StakeHomeState extends State<StakeHome> {
-  // --- Hàm tiện ích cho UI ---
+  final TextEditingController _searchController = TextEditingController();
+  String _searchText = '';
 
-  String _formatCurrency(String? amountString) {
-    if (amountString == null || amountString.isEmpty) return '0';
+  // --- HELPER: Hàm chuyển đổi Enum API sang Tiếng Việt hiển thị ---
+  String _mapStatusToVN(String? apiStatus) {
+    switch (apiStatus) {
+      case 'DangCho':
+        return 'Đang chờ';
+      case 'QuaHan':
+        return 'Quá hạn';
+      case 'KhachHuy':
+        return 'Khách hủy cọc';
+      case 'DaKyHopDong':
+        return 'Đã tạo hợp đồng';
+      default:
+        return 'Khác';
+    }
+  }
 
-    final cleanString = amountString.split('.').first;
-    final amount = int.tryParse(cleanString) ?? 0;
+  // --- 1. Hàm tính toán Summary (Cập nhật logic mapping) ---
+  StakeSummary _calculateSummaryFromList(List<ContentStakeModel> list) {
+    Map<String, int> counts = {
+      'DangCho': 0,
+      'QuaHan': 0,
+      'KhachHuy': 0,
+      'DaKyHopDong': 0,
+    };
+    Map<String, double> amounts = {
+      'DangCho': 0.0,
+      'QuaHan': 0.0,
+      'KhachHuy': 0.0,
+      'DaKyHopDong': 0.0,
+    };
 
-    final formatted = amount.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
+    for (var item in list) {
+      // Lấy trạng thái từ API (DangCho, QuaHan...)
+      String status = item.trangThai ?? '';
+
+      // Parse tiền
+      double money =
+          double.tryParse((item.tienCoc ?? '0').replaceAll(',', '')) ?? 0.0;
+
+      if (counts.containsKey(status)) {
+        counts[status] = (counts[status] ?? 0) + 1;
+        amounts[status] = (amounts[status] ?? 0.0) + money;
+      }
+    }
+
+    String format(double n) => NumberFormat('#,##0', 'vi_VN').format(n);
+
+    return StakeSummary(
+      dangChoValue:
+          '${counts['DangCho']} cọc - ${format(amounts['DangCho']!)} đ',
+      quaHanValue: '${counts['QuaHan']} cọc - ${format(amounts['QuaHan']!)} đ',
+      huyCocValue:
+          '${counts['KhachHuy']} cọc - ${format(amounts['KhachHuy']!)} đ',
+      daTaoHDValue:
+          '${counts['DaKyHopDong']} cọc - ${format(amounts['DaKyHopDong']!)} đ',
     );
-    return formatted;
   }
 
   String _formatCurrencyCard(String amount) {
     try {
-      // Chuyển string tiền có dấu .00 thành double
-      double value = double.tryParse(amount) ?? 0.0;
-      // Format thành chuỗi có dấu phân cách hàng nghìn
+      double value = double.tryParse(amount.replaceAll(',', '')) ?? 0.0;
       final formatter = NumberFormat('#,##0', 'vi_VN');
       return '${formatter.format(value)} đ';
     } catch (e) {
@@ -60,81 +89,16 @@ class _StakeHomeState extends State<StakeHome> {
     }
   }
 
-  StakeModel? _findStakeByStatus(List<StakeModel> stakes, String status) {
-    try {
-      return stakes.firstWhere((e) => e.trangThaiCoc == status);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // Hàm tính toán và tạo ra Model Tổng hợp (StakeSummary) từ List API
-  StakeSummary _calculateSummary(List<StakeModel> stakes) {
-    final dangCho = _findStakeByStatus(stakes, 'Đang chờ');
-    final quaHan = _findStakeByStatus(stakes, 'Quá hạn');
-    final huyCoc = _findStakeByStatus(stakes, 'Khách huỷ cọc');
-    final daTaoHD = _findStakeByStatus(stakes, 'Đã tạo hợp đồng');
-
-    String getValue(StakeModel? stake) {
-      if (stake == null) {
-        return '0 cọc - 0 đ';
-      }
-      final count = stake.soLuongCoc ?? 0;
-      final tien = _formatCurrency(stake.tongTienCoc);
-      return '$count cọc - $tien đ';
-    }
-
-    return StakeSummary(
-      dangChoValue: getValue(dangCho),
-      quaHanValue: getValue(quaHan),
-      huyCocValue: getValue(huyCoc),
-      daTaoHDValue: getValue(daTaoHD),
-    );
-  }
-
-  // ---------------------------------------------------------------------
-
-  /// Danh sách các trạng thái THEO ĐÚNG THỨ TỰ CỦA TAB
-  final List<String> _tabStatuses = const [
-    'Đang chờ',
-    'Quá hạn',
-    'Khách hủy cọc',
-    'Đã tạo hợp đồng',
-  ];
-
-  int _findInitialTabIndex(List<StakeModel> stakes) {
-    // Lặp qua danh sách trạng thái ưu tiên
-    for (int i = 0; i < _tabStatuses.length; i++) {
-      final status = _tabStatuses[i];
-
-      try {
-        // Tìm bản ghi thống kê tương ứng
-        final summary = stakes.firstWhere(
-          (stake) => stake.trangThaiCoc == status,
-        );
-
-        // Nếu tìm thấy và có dữ liệu, trả về index của tab đó
-        if (summary.soLuongCoc > 0) {
-          return i;
-        }
-      } catch (e) {
-        // .firstWhere ném lỗi nếu không tìm thấy, chúng ta bỏ qua và tiếp tục
-      }
-    }
-
-    // Nếu không có tab nào có dữ liệu, trả về tab đầu tiên (index 0)
-    return 0;
-  }
-
   @override
   void initState() {
     super.initState();
-
-    //goi api load stake khi vào màn hình
-    context.read<StakeCubit>().loadStake();
-
-    //goi api khi load content stake khi vào màn hình
     context.read<ContentStakeCubit>().loadContentStake();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -157,44 +121,47 @@ class _StakeHomeState extends State<StakeHome> {
               SizedBox(width: 16),
             ],
           ),
-
-          body: BlocBuilder<StakeCubit, StakeState>(
+          body: BlocBuilder<ContentStakeCubit, StakeState>(
             builder: (context, state) {
-              if (state.status == StakeStatus.loading) {
+              // DEBUG STATUS
+              print("Current State in Home: ${state.status}");
+
+              // 1. TRƯỜNG HỢP LOADING (Ưu tiên cao nhất)
+              // Chỉ hiện loading xoay to đùng nếu CHƯA CÓ dữ liệu
+              if (state.status == StakeStatus.loading &&
+                  state.dataContentStake == null) {
                 return const Center(child: CircularProgressIndicator());
-              } else if (state.status == StakeStatus.error) {
-                return Center(
-                  child: Text(
-                    'Lỗi: ${state.error}',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                );
-              } else if (state.status == StakeStatus.loaded &&
-                  state.dataStake != null) {
-                final List<StakeModel> stakes = state.dataStake!;
+              }
 
-                final int initialTabIndex = _findInitialTabIndex(stakes);
+              // 2. TRƯỜNG HỢP ERROR
+              if (state.status == StakeStatus.error &&
+                  state.dataContentStake == null) {
+                return Center(child: Text('Lỗi: ${state.error}'));
+              }
 
-                if (stakes.isEmpty) {
+              // 3. TRƯỜNG HỢP CÓ DỮ LIỆU (HIỆN DANH SÁCH)
+              // SỬA Ở ĐÂY: Không check status == loaded nữa, mà check data != null
+              // Điều này giúp hiển thị danh sách ngay cả khi status là 'deleteSuccess'
+              if (state.dataContentStake != null) {
+                final fullList = state.dataContentStake!;
+
+                if (fullList.isEmpty) {
                   return const Center(
-                    child: Text('Không có dữ liệu thống kê nào.'),
+                    child: Text('Chưa có cọc nào. Bấm nút + để thêm mới.'),
                   );
                 }
 
-                // Bọc toàn bộ phần nội dung thay đổi bằng DefaultTabController
+                final StakeSummary summaryData = _calculateSummaryFromList(
+                  fullList,
+                );
+
                 return DefaultTabController(
-                  length: 4, // Số lượng tab
-                  initialIndex: initialTabIndex, // Chỉ mục tab khởi tạo
+                  length: 4,
                   child: Column(
                     children: [
                       const SizedBox(height: 8),
-
-                      /// Thống kê trạng thái
-                      _buildSummaryStatus(stakes),
-
+                      _buildSummaryStatus(summaryData),
                       const SizedBox(height: 12),
-
-                      /// Tabs (TabBar)
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
                         child: TabBar(
@@ -206,24 +173,18 @@ class _StakeHomeState extends State<StakeHome> {
                           tabs: [
                             Tab(text: 'Chờ phòng'),
                             Tab(text: 'Quá hạn'),
-                            Tab(text: 'Khách huỷ cọc'),
+                            Tab(text: 'Khách hủy cọc'),
                             Tab(text: 'Đã tạo hợp đồng'),
                           ],
                         ),
                       ),
-
                       Expanded(
                         child: TabBarView(
                           children: [
-                            // Tab 1: Chờ phòng
-                            // Truyền trạng thái cọc cần lọc vào
-                            _buildTabContent('Chờ phòng'),
-                            // Tab 2: Quá hạn
-                            _buildTabContent('Quá hạn'),
-                            // Tab 3: Khách huỷ cọc
-                            _buildTabContent('Khách huỷ cọc'),
-                            // Tab 4: Đã tạo hợp đồng
-                            _buildTabContent('Đã tạo hợp đồng'),
+                            _buildTabContent(fullList, 'DangCho'),
+                            _buildTabContent(fullList, 'QuaHan'),
+                            _buildTabContent(fullList, 'KhachHuy'),
+                            _buildTabContent(fullList, 'DaKyHopDong'),
                           ],
                         ),
                       ),
@@ -231,15 +192,26 @@ class _StakeHomeState extends State<StakeHome> {
                   ),
                 );
               }
-              return const SizedBox();
+
+              // 4. FALLBACK (QUAN TRỌNG):
+              // Nếu trạng thái là Initial hoặc khác, vẫn hiện Loading thay vì màn hình trắng
+              return const Center(child: CircularProgressIndicator());
             },
           ),
         ),
+
+        // Nút Floating Action Button (FAB) tự chế
         Positioned(
           bottom: 84,
           right: 24,
           child: GestureDetector(
-            onTap: () {},
+            onTap: () async {
+              // Thêm async/await nếu muốn reload sau khi thêm mới
+              final result = await getIt<AppRouter>().push(AddStake());
+              if (result == true && context.mounted) {
+                context.read<ContentStakeCubit>().loadContentStake();
+              }
+            },
             child: Container(
               width: 60,
               height: 60,
@@ -262,68 +234,77 @@ class _StakeHomeState extends State<StakeHome> {
     );
   }
 
-  Widget _buildTabContent(String requiredStatus) {
-    return BlocBuilder<ContentStakeCubit, StakeState>(
-      builder: (context, state) {
-        if (state.status == StakeStatus.loading) {
-          // Hiển thị loading chỉ cho nội dung tab
-          return const Center(child: CircularProgressIndicator());
-        } else if (state.status == StakeStatus.error) {
-          return Center(
-            child: Text(
-              'Lỗi: ${state.error}',
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-          );
-        } else if (state.status == StakeStatus.loaded &&
-            state.dataContentStake != null) {
-          // Lọc dữ liệu theo trạng thái
-          final filteredStakes =
-              state.dataContentStake!
-                  .where((stake) => stake.trangThaiCoc == requiredStatus)
-                  .toList();
+  Widget _buildTabContent(
+    List<ContentStakeModel> fullList,
+    String requiredApiStatus,
+  ) {
+    final filteredStakes =
+        fullList.where((stake) {
+          // 1. Check Status (So sánh mã API)
+          String status = stake.trangThai ?? '';
+          if (status != requiredApiStatus) return false;
 
-          if (filteredStakes.isEmpty) {
-            return Center(child: Text('Không có dữ liệu'));
-          }
+          // 2. Check Search
+          if (_searchText.isEmpty) return true;
 
-          return Column(
-            children: [
-              // Khoảng cách 8pt theo yêu cầu
-              const SizedBox(height: 8),
+          String searchLower = _searchText.toLowerCase();
+          String tenNguoi = (stake.ten ?? '').toLowerCase();
+          String tenPhong = (stake.tenPhong ?? '').toLowerCase();
+          String tenToaNha = (stake.tenToanha ?? '').toLowerCase();
 
-              /// Ô tìm kiếm
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Tìm kiếm theo số hoá đơn, phòng...',
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
+          return tenNguoi.contains(searchLower) ||
+              tenPhong.contains(searchLower) ||
+              tenToaNha.contains(searchLower);
+        }).toList();
+
+    return Column(
+      children: [
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) {
+              setState(() {
+                _searchText = value;
+              });
+            },
+            decoration: InputDecoration(
+              hintText: 'Tìm theo tên khách, tên phòng...',
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Colors.grey[100],
+              contentPadding: EdgeInsets.zero,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
               ),
-
-              const SizedBox(height: 12),
-
-              // Truyền dữ liệu đã lọc vào widget hiển thị card
-              Expanded(child: _buildDepositCard(filteredStakes)),
-            ],
-          );
-        }
-        return const SizedBox();
-      },
+              suffixIcon:
+                  _searchText.isNotEmpty
+                      ? IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _searchText = '';
+                          });
+                        },
+                      )
+                      : null,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (filteredStakes.isEmpty)
+          const Expanded(
+            child: Center(child: Text('Không tìm thấy dữ liệu phù hợp')),
+          ),
+        if (filteredStakes.isNotEmpty)
+          Expanded(child: _buildDepositCard(filteredStakes)),
+      ],
     );
   }
 
-  /// Widget: Card item cọc giữ chỗ
-  // Cập nhật hàm để nhận vào danh sách ContentStakeModel
   Widget _buildDepositCard(List<ContentStakeModel> stakes) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -331,10 +312,31 @@ class _StakeHomeState extends State<StakeHome> {
       itemBuilder: (context, index) {
         final stake = stakes[index];
         return GestureDetector(
-          onTap: () {
-            // Điều hướng đến chi tiết cọc giữ chỗ
-            // Thay DetailStake() bằng Route cần thiết
-            // getIt<AppRouter>().push(DetailStake(stakeId: stake.idNguoiThue));
+          onTap: () async {
+            // 1. Chờ kết quả trả về từ DetailStake
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => DetailStake(
+                      idStake: stake.idCoc,
+                      status: _mapStatusToVN(stake.trangThai),
+                    ),
+              ),
+            );
+            print("id coc: ${stake.idCoc}");
+
+            // 2. Debug: In ra để xem có nhận được true không
+            print("Kết quả trả về từ Detail: $result");
+
+            // 3. Nếu kết quả là TRUE -> Reload danh sách
+            if (result == true) {
+              // Kiểm tra context an toàn trước khi gọi Cubit
+              if (context.mounted) {
+                print("Đang reload danh sách...");
+                context.read<ContentStakeCubit>().loadContentStake();
+              }
+            }
           },
           child: Container(
             margin: const EdgeInsets.only(bottom: 16),
@@ -354,21 +356,17 @@ class _StakeHomeState extends State<StakeHome> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// Tên người
                   Row(
                     children: [
                       const Icon(Icons.person, size: 18, color: Colors.grey),
                       const SizedBox(width: 6),
                       Text(
-                        stake.ten ?? '',
+                        stake.ten ?? 'Tên trống',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 6),
-
-                  /// Phòng
                   Row(
                     children: [
                       const Icon(
@@ -381,8 +379,6 @@ class _StakeHomeState extends State<StakeHome> {
                     ],
                   ),
                   const SizedBox(height: 6),
-
-                  /// Ngày hẹn vào (ngay_batdau)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -394,7 +390,7 @@ class _StakeHomeState extends State<StakeHome> {
                             color: Colors.grey,
                           ),
                           SizedBox(width: 6),
-                          Text('Ngày bắt đầu'),
+                          Text('Ngày dự kiến'), // Sửa label cho đúng nghĩa
                         ],
                       ),
                       Text(
@@ -403,16 +399,11 @@ class _StakeHomeState extends State<StakeHome> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 10),
-
-                  /// Giá tiền (tien_coc)
                   Align(
                     alignment: Alignment.centerRight,
                     child: Text(
-                      _formatCurrencyCard(
-                        stake.tienCoc ?? '',
-                      ), // Sử dụng hàm format
+                      _formatCurrencyCard(stake.tienCoc ?? ''),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.green,
@@ -429,23 +420,7 @@ class _StakeHomeState extends State<StakeHome> {
     );
   }
 
-  /// Widget: Thống kê trạng thái cọc
-  Widget _buildSummaryStatus(List<StakeModel> stakes) {
-    final dangCho = _findStakeByStatus(stakes, 'Đang chờ');
-    final quaHan = _findStakeByStatus(stakes, 'Quá hạn');
-    final huyCoc = _findStakeByStatus(stakes, 'Khách huỷ cọc');
-    final daTaoHD = _findStakeByStatus(stakes, 'Đã tạo hợp đồng');
-
-    // 2. Hàm tiện ích để hiển thị giá trị
-    String getValue(StakeModel? stake) {
-      if (stake == null) {
-        return '0 cọc - 0 đ';
-      }
-      final count = stake.soLuongCoc ?? 0;
-      final tien = _formatCurrency(stake.tongTienCoc);
-      return '$count cọc - $tien đ';
-    }
-
+  Widget _buildSummaryStatus(StakeSummary summary) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -454,31 +429,27 @@ class _StakeHomeState extends State<StakeHome> {
           color: const Color(0xFFDFF5DC),
           borderRadius: BorderRadius.circular(12),
         ),
-        // SỬ DỤNG INTRINSICHEIGHT ĐỂ VERTICAL DIVIDER CÓ CHIỀU CAO CHÍNH XÁC
         child: IntrinsicHeight(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // Cột 1 (Đã thêm Expanded)
               Expanded(
                 child: Column(
                   children: [
                     _SummaryItem(
                       title: 'Đang chờ',
-                      value: getValue(dangCho),
+                      value: summary.dangChoValue,
                       color: Colors.green,
                     ),
                     const SizedBox(height: 12),
                     _SummaryItem(
-                      title: 'Khách huỷ cọc',
-                      value: getValue(huyCoc),
+                      title: 'Khách hủy cọc',
+                      value: summary.huyCocValue,
                       color: Colors.orange,
                     ),
                   ],
                 ),
               ),
-
-              // Đường phân cách dọc
               const VerticalDivider(
                 color: Colors.black26,
                 thickness: 1,
@@ -486,20 +457,18 @@ class _StakeHomeState extends State<StakeHome> {
                 indent: 8,
                 endIndent: 8,
               ),
-
-              // Cột 2 (Đã thêm Expanded)
               Expanded(
                 child: Column(
                   children: [
                     _SummaryItem(
                       title: 'Quá hạn',
-                      value: getValue(quaHan),
+                      value: summary.quaHanValue,
                       color: Colors.red,
                     ),
                     const SizedBox(height: 12),
                     _SummaryItem(
                       title: 'Đã tạo hợp đồng',
-                      value: getValue(daTaoHD),
+                      value: summary.daTaoHDValue,
                       color: Colors.blue,
                     ),
                   ],
@@ -547,4 +516,18 @@ class _SummaryItem extends StatelessWidget {
       ],
     );
   }
+}
+
+class StakeSummary {
+  final String dangChoValue;
+  final String quaHanValue;
+  final String huyCocValue;
+  final String daTaoHDValue;
+
+  StakeSummary({
+    required this.dangChoValue,
+    required this.quaHanValue,
+    required this.huyCocValue,
+    required this.daTaoHDValue,
+  });
 }

@@ -37,9 +37,9 @@ class _CreateRoomState extends State<CreateRoom> {
       TextEditingController();
   final TextEditingController _roomNoteController = TextEditingController();
 
-  List<ServiceModel> _selectedServicesForPayload = [];
+  final List<ServiceModel> _selectedServicesForPayload = [];
 
-  List<String> _selectedAmenities = [];
+  final List<String> _selectedAmenities = [];
   void _toggleAmenity(String amenity) {
     // Cập nhật trạng thái
     setState(() {

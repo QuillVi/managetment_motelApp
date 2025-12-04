@@ -64,7 +64,7 @@ class BillRepository {
         // Server trả về không phải JSON Map
         throw Exception('Server trả về định dạng dữ liệu không mong đợi.');
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       // Xử lý Lỗi Dio (404, 500, timeout)
       print('DioError updateBill: $e');
       if (e.response?.data != null &&
@@ -108,7 +108,7 @@ class BillRepository {
         // Nếu response.data KHÔNG phải là Map (ví dụ: là List hoặc String)
         throw Exception('Server trả về định dạng dữ liệu không mong đợi.');
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       print('DioError updateBillStatusToPaid: $e');
 
       // --- SỬA LỖI Ở ĐÂY (CHO DIOERROR) ---
@@ -156,7 +156,7 @@ class BillRepository {
         // Server trả về không phải JSON Map
         throw Exception('Server trả về định dạng dữ liệu không mong đợi.');
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       // Lỗi Dio (404, 500, timeout)
       print('DioError revertBillStatus: $e');
       if (e.response?.data != null &&

@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:motelapp/core/utils/exceptions.dart';
 import 'package:motelapp/data/repositories/owe_repository/owe_repository.dart';
 import 'package:motelapp/logic/cubits/home/owe_home/owe_state.dart';
 

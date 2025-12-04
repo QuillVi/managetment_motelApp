@@ -10,8 +10,11 @@ class BillPreviewScreen extends StatelessWidget {
   final DetailBillModel bill;
   final bool isPaid;
 
-  const BillPreviewScreen({Key? key, required this.bill, required this.isPaid})
-    : super(key: key);
+  const BillPreviewScreen({
+    super.key,
+    required this.bill,
+    required this.isPaid,
+  });
 
   @override
   Widget build(BuildContext context) {

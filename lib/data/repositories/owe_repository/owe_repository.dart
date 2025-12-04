@@ -44,7 +44,7 @@ class OweRepository {
       print(
         '❌ Done Debt API DioException: ${e.response?.statusCode} - ${e.message}',
       );
-      throw e; // Ném lại lỗi để Cubit bắt.
+      rethrow; // Ném lại lỗi để Cubit bắt.
     } catch (e) {
       print('❌ Done Debt API Unknown Error: $e');
       throw Exception('Lỗi không xác định khi lấy hóa đơn đã thanh toán.');

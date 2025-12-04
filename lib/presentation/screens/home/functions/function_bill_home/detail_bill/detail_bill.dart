@@ -427,10 +427,6 @@ class _DetailBillState extends State<DetailBill> {
                         // TODO: Xử lý sự kiện "Thanh toán"
                         _showPaymentDialog(context, bill);
                       },
-                      child: const Text(
-                        "Thanh toán",
-                        style: TextStyle(fontSize: 16),
-                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green, // Màu chính
                         foregroundColor: Colors.white,
@@ -438,6 +434,10 @@ class _DetailBillState extends State<DetailBill> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                      ),
+                      child: const Text(
+                        "Thanh toán",
+                        style: TextStyle(fontSize: 16),
                       ),
                     ),
                   ),
@@ -451,7 +451,6 @@ class _DetailBillState extends State<DetailBill> {
                           onPressed: () {
                             // TODO: Xử lý sự kiện "Chỉnh sửa"
                           },
-                          child: const Text("Chỉnh sửa"),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.orange,
                             side: const BorderSide(color: Colors.orange),
@@ -460,13 +459,13 @@ class _DetailBillState extends State<DetailBill> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
+                          child: const Text("Chỉnh sửa"),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () async {},
-                          child: const Text("Xoá"),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red[400],
                             side: BorderSide(color: Colors.red[400]!),
@@ -475,6 +474,7 @@ class _DetailBillState extends State<DetailBill> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
+                          child: const Text("Xoá"),
                         ),
                       ),
                     ],
@@ -519,7 +519,6 @@ class _DetailBillState extends State<DetailBill> {
                       );
                     }
                   },
-                  child: const Text("Xoá", style: TextStyle(fontSize: 16)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red[400], // Màu đỏ
                     foregroundColor: Colors.white,
@@ -529,6 +528,7 @@ class _DetailBillState extends State<DetailBill> {
                     ),
                     elevation: 0,
                   ),
+                  child: const Text("Xoá", style: TextStyle(fontSize: 16)),
                 ),
               );
 
@@ -679,7 +679,7 @@ class _DetailBillState extends State<DetailBill> {
 class _PaymentDialogContent extends StatefulWidget {
   final DetailBillModel bill;
 
-  const _PaymentDialogContent({Key? key, required this.bill}) : super(key: key);
+  const _PaymentDialogContent({super.key, required this.bill});
 
   @override
   _PaymentDialogContentState createState() => _PaymentDialogContentState();
@@ -689,7 +689,7 @@ class _PaymentDialogContentState extends State<_PaymentDialogContent> {
   // --- Biến trạng thái để lưu trữ lựa chọn ---
   String _selectedMethod = "Tiền mặt";
   late String _selectedPayer;
-  DateTime _selectedDate = DateTime.now(); // Lấy ngày hiện tại
+  final DateTime _selectedDate = DateTime.now(); // Lấy ngày hiện tại
 
   // Helper để định dạng tiền tệ
   String _formatCurrency(double amount) {
@@ -814,7 +814,6 @@ class _PaymentDialogContentState extends State<_PaymentDialogContent> {
                   );
                 }
               },
-              child: const Text("Thanh toán", style: TextStyle(fontSize: 16)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green, // Màu chính
                 foregroundColor: Colors.white,
@@ -823,6 +822,7 @@ class _PaymentDialogContentState extends State<_PaymentDialogContent> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
+              child: const Text("Thanh toán", style: TextStyle(fontSize: 16)),
             ),
           ),
         ],

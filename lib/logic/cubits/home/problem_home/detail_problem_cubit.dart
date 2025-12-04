@@ -29,4 +29,30 @@ class DetailProblemCubit extends Cubit<DetailProblemState> {
       );
     }
   }
+
+  Future<void> markAsComplete(int problemId) async {
+    // 1. Chuyển trạng thái sang completing (để hiện loading ở nút bấm)
+    emit(state.copyWith(status: DetailProblemStatus.completing));
+
+    try {
+      // 2. Gọi repo
+      final success = await detailProblemRepository.completeProblem(problemId);
+
+      if (success) {
+        // 3a. Nếu thành công -> Báo Success
+        emit(state.copyWith(status: DetailProblemStatus.completeSuccess));
+
+        // 4. Load lại data mới nhất để UI cập nhật chữ "Đang yêu cầu" -> "Hoàn thành"
+        await loadDetailProblem(problemId);
+      }
+    } catch (e) {
+      // 3b. Nếu lỗi -> Báo Failure
+      emit(
+        state.copyWith(
+          status: DetailProblemStatus.completeFailure,
+          errorMessage: e.toString(),
+        ),
+      );
+    }
+  }
 }

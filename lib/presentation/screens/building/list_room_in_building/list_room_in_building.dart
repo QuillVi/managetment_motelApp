@@ -42,7 +42,7 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
   RoomFilterStatus _currentStatusFilter = RoomFilterStatus.all;
   double _currentMinPrice = 0;
   double _currentMaxPrice = 100000000; // Sẽ được cập nhật từ API
-  double _maxPriceFromData = 100000000; // Giá tối đa thực tế từ API
+  final double _maxPriceFromData = 100000000; // Giá tối đa thực tế từ API
 
   /// HÀM LỌC TỔNG HỢP (THAY THẾ _filterRoomsByName)
   void _applyFilters() {
@@ -765,8 +765,8 @@ class _ListRoomInBuildingState extends State<ListRoomInBuilding> {
                         return Center(
                           child: ServiceCard(
                             iconPath: service.icon!,
-                            title: service.ten_dichvu!,
-                            price: service.phi_dichvu!.toString(),
+                            title: service.ten_dichvu,
+                            price: service.phi_dichvu.toString(),
                           ),
                         );
                       }),

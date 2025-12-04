@@ -20,7 +20,7 @@ class StatisticalHomeRepository {
       );
 
       final data = respones.data;
-      print('data statictical : ${data}');
+      print('data statictical : $data');
 
       if (data['success'] == true && data['data'] != null) {
         final map = data['data'];

@@ -185,10 +185,10 @@ class _ContractHomeUserState extends State<ContractHomeUser> {
   Widget buildContractCard(BuildContext context, ListContractModel contract) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const DetailContract()),
-        );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const DetailContract()),
+        // );
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

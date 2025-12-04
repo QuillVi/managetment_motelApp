@@ -323,7 +323,7 @@ class _UpdateServiceHomeState extends State<UpdateServiceHome> {
                                 });
                               },
                             );
-                          }).toList(),
+                          }),
                         ],
                       );
                     },

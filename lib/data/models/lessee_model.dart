@@ -4,6 +4,7 @@ class LesseeModel {
   final String? soDienThoai;
   final String? tenPhong;
   final String? tenToaNha;
+  final String? trangThaiHopDong;
 
   LesseeModel({
     required this.idNguoiThue,
@@ -11,15 +12,17 @@ class LesseeModel {
     this.soDienThoai,
     this.tenPhong,
     this.tenToaNha,
+    this.trangThaiHopDong,
   });
 
   factory LesseeModel.fromMap(Map<String, dynamic> map) {
     return LesseeModel(
-      idNguoiThue: map['id_nguoithue'],
-      tenNguoiThue: map['ten_nguoithue'],
-      soDienThoai: map['sdt_nguoithue'],
+      idNguoiThue: map['id_nguoidung'] ?? 0,
+      tenNguoiThue: map['ten_nguoi_thue'] ?? 'Chưa cập nhật',
+      soDienThoai: map['sdt_nguoi_thue'],
       tenPhong: map['ten_phong'],
       tenToaNha: map['ten_toanha'],
+      trangThaiHopDong: map['trang_thai_hop_dong'],
     );
   }
 }

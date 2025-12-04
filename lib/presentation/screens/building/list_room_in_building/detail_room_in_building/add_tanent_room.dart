@@ -48,16 +48,19 @@ class _AddTanentRoomState extends State<AddTanentRoom> {
   }) {
     final String dateTextForController =
         selectedDate != null
-            ? "${selectedDate.year}-" +
-                "${selectedDate.month.toString().padLeft(2, '0')}-" + // Đảm bảo 2 chữ số cho tháng
-                "${selectedDate.day.toString().padLeft(2, '0')}" // Đảm bảo 2 chữ số cho ngày
+            ? "${selectedDate.year}-"
+                    "${selectedDate.month.toString().padLeft(2, '0')}-" + // Đảm bảo 2 chữ số cho tháng
+                selectedDate.day.toString().padLeft(
+                  2,
+                  '0',
+                ) // Đảm bảo 2 chữ số cho ngày
             : '';
 
     // 2. Định dạng ngày cho UI hiển thị (Tùy chọn: DD/MM/YYYY)
     final String dateTextForUI =
         selectedDate != null
-            ? "${selectedDate.day.toString().padLeft(2, '0')}/" +
-                "${selectedDate.month.toString().padLeft(2, '0')}/" +
+            ? "${selectedDate.day.toString().padLeft(2, '0')}/"
+                    "${selectedDate.month.toString().padLeft(2, '0')}/" +
                 "${selectedDate.year}"
             : '';
 
@@ -304,7 +307,7 @@ class _AddTanentRoomState extends State<AddTanentRoom> {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             // Bạn phải đảm bảo idPhong là một số nguyên (int) hoặc null
                             // Nếu idPhong của bạn đang là 'N/A' (chuỗi), bạn cần chuyển nó thành int?
-                            if (idPhong is int || idPhong == null) {
+                            if (idPhong is int) {
                               _selectedRoomId = idPhong as int?;
                             } else if (idPhong is String && idPhong != 'N/A') {
                               _selectedRoomId = idPhong;

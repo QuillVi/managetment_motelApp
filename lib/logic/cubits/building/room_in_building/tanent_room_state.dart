@@ -9,12 +9,14 @@ class TanentRoomState extends Equatable {
   final String? errorMessage;
   final List<TenantModel>? tanent;
   final List<NameRoomBuildingModel>? nameRoomBuilding;
+  final List<SelectRoomIDManagetModel>? selectRoomIDManaget;
 
   const TanentRoomState({
     this.status = TanentRoomStatus.initial,
     this.errorMessage,
     this.tanent,
     this.nameRoomBuilding,
+    this.selectRoomIDManaget,
   });
 
   TanentRoomState copyWith({
@@ -22,15 +24,23 @@ class TanentRoomState extends Equatable {
     String? errorMessage,
     List<TenantModel>? tanent,
     List<NameRoomBuildingModel>? nameRoomBuilding,
+    List<SelectRoomIDManagetModel>? selectRoomIDManaget,
   }) {
     return TanentRoomState(
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       tanent: tanent ?? this.tanent,
       nameRoomBuilding: nameRoomBuilding ?? this.nameRoomBuilding,
+      selectRoomIDManaget: selectRoomIDManaget ?? this.selectRoomIDManaget,
     );
   }
 
   @override
-  List<Object?> get props => [status, errorMessage, tanent, nameRoomBuilding];
+  List<Object?> get props => [
+    status,
+    errorMessage,
+    tanent,
+    nameRoomBuilding,
+    selectRoomIDManaget,
+  ];
 }

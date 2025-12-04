@@ -13,7 +13,7 @@ class DioClient {
   DioClient._internal() {
     dio = Dio(
       BaseOptions(
-        baseUrl: 'http://192.168.1.4:3000/api', // Sửa nếu deploy
+        baseUrl: 'http://192.168.1.3:3000/api', // Sửa nếu deploy
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         headers: {'Content-Type': 'application/json'},

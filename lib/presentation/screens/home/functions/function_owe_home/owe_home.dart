@@ -275,7 +275,7 @@ class _OweCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${owe.tenNguoiThue}',
+                        owe.tenNguoiThue,
                         style: const TextStyle(color: Colors.black87),
                         overflow: TextOverflow.ellipsis,
                       ),

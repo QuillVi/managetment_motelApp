@@ -27,15 +27,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final List<Map<String, dynamic>> functionMotelApp = [
     {'icon': Icons.lightbulb, 'label': 'Dịch vụ', 'color': Colors.amber},
-    {'icon': Icons.speed, 'label': 'Chốt điện nước', 'color': Colors.blue},
+    // {'icon': Icons.speed, 'label': 'Chốt điện nước', 'color': Colors.blue},
     {'icon': Icons.receipt_long, 'label': 'Hoá đơn', 'color': Colors.green},
-    {'icon': Icons.person, 'label': 'Người thuê', 'color': Colors.orange},
+    {'icon': Icons.person, 'label': 'Người thuê', 'color': Colors.blue},
     {'icon': Icons.report_problem, 'label': 'Sự cố', 'color': Colors.red},
     {'icon': Icons.handshake, 'label': 'Hợp đồng', 'color': Colors.purple},
     {'icon': Icons.attach_money, 'label': 'Cọc giữ chỗ', 'color': Colors.teal},
-    {'icon': Icons.local_mall, 'label': 'Đầy phòng', 'color': Colors.indigo},
+    // {'icon': Icons.local_mall, 'label': 'Đầy phòng', 'color': Colors.indigo},
     {'icon': Icons.article, 'label': 'Số nợ', 'color': Colors.brown},
-    {'icon': Icons.help_outline, 'label': 'Hướng dẫn', 'color': Colors.grey},
+    //{'icon': Icons.help_outline, 'label': 'Hướng dẫn', 'color': Colors.grey},
   ];
 
   void _onFeatureTap(int index) {
@@ -46,32 +46,23 @@ class _HomeScreenState extends State<HomeScreen> {
         router.push(ServiceHome());
         break;
       case 1:
-        router.push(ElectricwaterHome());
-        break;
-      case 2:
         router.push(BillHome());
         break;
-      case 3:
+      case 2:
         router.push(TenantHome());
         break;
-      case 4:
+      case 3:
         router.push(ProblemHome());
         break;
-      case 5:
+      case 4:
         router.push(ContractHome());
         break;
-      case 6:
+      case 5:
         router.push(StakeHome());
         break;
-      // case 7:
-      //   router.push(DayPhongScreen());
-      //   break;
-      case 8:
+      case 6:
         router.push(OweHome());
         break;
-      // case 9:
-      //   router.push(HuongDanScreen());
-      //   break;
 
       default:
         ScaffoldMessenger.of(
@@ -84,8 +75,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
     }
   }
-
-  // ... các import và phần code trên giữ nguyên ...
 
   @override
   void initState() {

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:motelapp/data/services/service_locator.dart';
 import 'package:motelapp/logic/cubits/home/problem_home/detail_problem_cubit.dart';
 import 'package:motelapp/logic/cubits/home/problem_home/detail_problem_state.dart';
-import 'package:motelapp/presentation/screens/home/functions/function_problem_home/problem_home.dart';
 import 'package:motelapp/presentation/user_screens/homeUser/function/function_problem_home/problem_home_user.dart';
 import 'package:motelapp/router/app_router.dart';
 

@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:motelapp/data/services/service_locator.dart';
-import 'package:motelapp/presentation/screens/home/functions/function_bill_home/make_bill/make_bill.dart';
-import 'package:motelapp/router/app_router.dart';
 
 class BillHomeUser extends StatefulWidget {
   const BillHomeUser({super.key});

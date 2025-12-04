@@ -140,3 +140,38 @@ class ManageModel {
     );
   }
 }
+
+class SelectTanentContractModel {
+  final int idNguoiThue;
+  final String? ten;
+  final String? sdt;
+  final String? ngaySinh;
+  final String? diaChi;
+  final String? cccd;
+  final String? ngayCap;
+  final String? noiCap;
+
+  SelectTanentContractModel({
+    required this.idNguoiThue,
+    this.ten,
+    this.sdt,
+    this.ngaySinh,
+    this.diaChi,
+    this.cccd,
+    this.ngayCap,
+    this.noiCap,
+  });
+
+  factory SelectTanentContractModel.fromMap(Map<String, dynamic> map) {
+    return SelectTanentContractModel(
+      idNguoiThue: map['id_nguoidung'],
+      ten: map['ten'],
+      sdt: map['sdt'],
+      ngaySinh: map['ngay_sinh'],
+      diaChi: map['dia_chi'],
+      cccd: map['cmnd_cccd'],
+      ngayCap: map['ngay_cap'],
+      noiCap: map['noi_cap'],
+    );
+  }
+}

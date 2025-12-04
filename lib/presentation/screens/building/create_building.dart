@@ -123,7 +123,7 @@ class _CreateBuildingState extends State<CreateBuilding> {
   // --- NEW: Phần 3 (Từ hình ảnh mới nhất) ---
   final TextEditingController _buildingNoteController = TextEditingController();
   final TextEditingController _billNoteController = TextEditingController();
-  List<String> _selectedAmenities = [];
+  final List<String> _selectedAmenities = [];
 
   List<ServiceModel> _selectedServicesForDisplay = [];
 
@@ -900,7 +900,7 @@ class _CreateBuildingState extends State<CreateBuilding> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       hint: Text(
         hintText,
         style: const TextStyle(color: Colors.grey, fontSize: 12),
